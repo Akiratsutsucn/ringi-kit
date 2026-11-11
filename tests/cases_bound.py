@@ -6,7 +6,7 @@ import re
 import shutil
 import subprocess
 
-from tlib import C, ENV, EXAMPLES, ROOT, dump, lint_only, load, pipeline, record, run
+from tlib import C, ENV, EXAMPLES, ROOT, dump, lint_only, load, pipeline, ps_exe, record, run
 
 A = EXAMPLES["a-sccm"]
 
@@ -109,7 +109,7 @@ def b08():
     target = str(C.kit / "powershell")
     res = {}
     for exe in ("powershell", "pwsh"):
-        path = shutil.which(exe)
+        path = ps_exe(exe)
         if not path:
             res[exe] = (None, "未安装")
             continue
@@ -119,7 +119,7 @@ def b08():
     smoke = ROOT / "tests" / "ps_smoke.ps1"
     smoke_res = {}
     for exe in ("powershell", "pwsh"):
-        path = shutil.which(exe)
+        path = ps_exe(exe)
         if path:
             p = subprocess.run([path, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(smoke), "-Kit", target,
                                 "-Out", str(C.work / "B-08" / exe)], capture_output=True, text=True, encoding="utf-8",

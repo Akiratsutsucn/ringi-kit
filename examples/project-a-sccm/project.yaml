@@ -246,11 +246,11 @@ deliverables:
   format: "Markdown 源文件 + CSV；定稿另行转换为 PDF"
 
 anchors:
-  - {id: "AN-01", topic: "配置管理器 current branch 版本与生命周期", source: "learn.microsoft.com/mem/configmgr", value: "【示例】形式占位值，真实使用时填写受支持版本与停支日期", verified_on: "2026-11-10"}
-  - {id: "AN-02", topic: "客户端支持的操作系统版本矩阵", source: "learn.microsoft.com/mem/configmgr", value: "【示例】形式占位值，真实使用时填写受支持客户端操作系统清单", verified_on: "2026-11-10"}
-  - {id: "AN-03", topic: "目录服务功能级别支持矩阵", source: "learn.microsoft.com", value: "【示例】形式占位值，真实使用时填写受支持功能级别", verified_on: "2026-11-10"}
-  - {id: "AN-04", topic: "移行工具官方支持状态与版本要求", source: "learn.microsoft.com", value: "【示例】不适用本项目", verified_on: "2026-11-10"}
-  - {id: "AN-05", topic: "历史 SID 默认存活期限与配置项", source: "learn.microsoft.com", value: "【示例】不适用本项目", verified_on: "2026-11-10"}
-  - {id: "AN-06", topic: "同步服务出站端点清单与支持的服务器操作系统", source: "learn.microsoft.com", value: "【示例】不适用本项目", verified_on: "2026-11-10"}
+  - {id: "AN-01", topic: "配置管理器 current branch 版本与生命周期", source: "learn.microsoft.com/intune/configmgr/core/servers/manage/updates", value: "受支持版本：2609（支持至 2028-03-28）、2603（至 2027-11-05）、2509（至 2027-05-12）；2503 已于 2026-09-30 结束支持。各版本支持 18 个月，仅最新版提供关键更新，其余仅安全更新。页面更新 2026-10-30", verified_on: "2026-11-11"}
+  - {id: "AN-02", topic: "客户端支持的操作系统版本矩阵", source: "learn.microsoft.com/intune/configmgr/core/plan-design/configs/supported-operating-systems-for-clients-and-devices", value: "Windows 11 26H2（仅 2603/2609）、25H2、24H2、23H2（Enterprise/Pro/Education 等版）；Windows 10 仅 22H2（ESU 期间只支持 ESU 更新与升级到 Windows 11）及 LTSB 2016、LTSC 2019、LTSC 2021；页面未列 Windows 11 LTSC 2024。页面更新 2026-10-13", verified_on: "2026-11-11"}
+  - {id: "AN-03", topic: "目录服务功能级别支持矩阵", source: "learn.microsoft.com/windows-server/identity/ad-ds/active-directory-functional-levels", value: "现行级别：Windows Server 2025（域控仅限 WS2025）、Windows Server 2016（域控 WS2016–WS2025，SYSVOL 须 DFSR 复制）、Windows Server 2012 R2（域控 WS2012 R2–WS2022，WS2025 域控不支持该级别）；WS2019 与 WS2022 无独立功能级别。页面更新 2025-10-30", verified_on: "2026-11-11"}
+  - {id: "AN-04", topic: "移行工具官方支持状态与版本要求", source: "learn.microsoft.com/troubleshoot/windows-server/identity/support-policy-and-known-issues-for-admt", value: "ADMT 最新版本 3.2，官方定性为已弃用（deprecated）：不再提供安全修复、缺陷修复或设计变更，支持请求按 best effort 处理；未针对 WS2012 R2–WS2022 更新，页面未提及 WS2025；已知与 Credential Guard、LSA 保护冲突，SQL 主机关闭 TLS 1.0 后无法启动。页面更新 2026-02-18", verified_on: "2026-11-11"}
+  - {id: "AN-05", topic: "历史 SID 默认存活期限与配置项", source: "learn.microsoft.com/windows/win32/adschema/a-sidhistory", value: "官方文档未见历史 SID 自动过期机制，属性须手动清理（Set-ADUser 的 -Remove 参数删除 SIDHistory 值）。180 天是逻辑删除对象保存期限（tombstoneLifetime）在 WS2003 SP1 以后新建林的默认值，旧林及属性未设值时为 60 天，与历史 SID 无关。信任侧：林信任用 netdom trust /enablesidhistory、外部信任用 /quarantine 控制；官方页面对 SID 筛选默认值描述不一致，须对实际信任查询确认。netdom 页更新 2025-10-22", verified_on: "2026-11-11"}
+  - {id: "AN-06", topic: "同步服务出站端点清单与支持的服务器操作系统", source: "learn.microsoft.com/entra/identity/hybrid/connect/how-to-connect-install-prerequisites", value: "出站 HTTPS 443：*.microsoftonline.com、graph.microsoft.com、*.management.core.windows.net、*.graph.windows.net、secure.aadcdn.microsoftonline-p.com；HTTP 80：证书吊销确认（CRL/OCSP）端点；完整清单以 Microsoft 365 URL 与 IP 地址范围页面为准。可经代理（machine.config defaultProxy；需认证时服务账户须为域账户；空闲超时至少 6 分钟；不支持中途解密）。服务器 OS：推荐 Windows Server 2025 / 2022，须入域、带 GUI，不支持 Server Core。版本：最新 2.6.92.0；2.x 在新版发布 12 个月后退休；2027-04-07 前须升级至 2.6.84.0 以上并改用应用程序身份验证。页面更新 2026-09-29", verified_on: "2026-11-11"}
 
 assumptions: []

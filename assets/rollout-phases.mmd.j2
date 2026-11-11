@@ -2,7 +2,7 @@
 gantt
   title {{ doc.figure["rollout-phases"].title | mm }}
   dateFormat YYYY-MM-DD
-  axisFormat %m-%d
+  axisFormat %Y-%m
   section 阶段与承认缓冲
 {% for r in schedule.wbs if r.phase != "里程碑" and r.phase != "铺装/迁移波次" %}
   {{ r.name | mm }} :{{ "crit, " if r.phase == "承认" else "" }}wbs{{ loop.index }}, {{ r.start }}, {{ r.end }}

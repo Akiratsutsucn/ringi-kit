@@ -86,7 +86,7 @@ python3 scripts/render.py --config <项目>/project.yaml --out <项目>/build/<p
 python3 scripts/diagram.py --src <项目>/build/<code>/figures --out <项目>/build/<code>/figures
 ```
 
-**门禁**：`deliverables.items` 声明的全部产物渲染成功（退出码 0）。模板变量缺失即报错退出，不输出半成品。`render.py` 写入 `LINT_STATUS.txt`（初始为 FAIL）与 `fact_model.json`。没有 mermaid-cli 时 `diagram.py` 输出 `.mmd` 并 WARN，需手工渲染为 svg 放回同一目录。
+**门禁**：`deliverables.items` 声明的全部产物渲染成功（退出码 0）。模板变量缺失即报错退出，不输出半成品。`render.py` 写入 `LINT_STATUS.txt`（初始为 FAIL）与 `fact_model.json`。没有 mermaid-cli 时 `diagram.py` 输出 `.mmd` 并 WARN，需手工渲染为 svg 放回同一目录。用本机浏览器渲染时加 `--puppeteer-config <配置文件>`。
 
 ### S4 完备性校验
 

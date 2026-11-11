@@ -40,6 +40,6 @@ try {
         Write-StepLog -Message $detail -StepId $GateId -LogPath $LogPath -WhatIf:$WhatIfPreference
     }
 } finally {
-    Set-Location $location
+    Set-Location -LiteralPath $location.Path
 }
 Export-AuditCsv -InputObject $rows -Path $OutputPath -WhatIf:$WhatIfPreference

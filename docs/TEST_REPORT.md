@@ -8,26 +8,29 @@
 - 执行日期：2026-11-11
 - 操作系统：Windows-11-10.0.26100-SP0
 - Python：3.12.10；Jinja2 3.1.6；PyYAML 6.0.3
-- Windows PowerShell：7.6.1；PowerShell 7：7.6.1
-- mermaid-cli：未安装（B-06 走降级路径）
+- Windows PowerShell：5.1.26100.2161；PowerShell 7：7.6.1
+- mermaid-cli：12.2.0（.bin）（B-06 始终用不存在的路径测试降级）
+- Terraform：Terraform v1.17.2（terraform）
 
 执行命令：`python tests/run_tests.py`（在仓库根目录）。全部输出在 `.work/tests/<用例ID>/`（已加入 .gitignore）。
 
 ## 汇总
 
-| 分组 | 通过 | 合计 |
-|---|---|---|
-| 正例 | 7 | 7 |
-| 负例 | 25 | 25 |
-| 边界 | 8 | 8 |
-| 验收清单·结构 | 8 | 8 |
-| 验收清单·行为 | 1 | 1 |
-| 验收清单·内容 | 6 | 6 |
-| 验收清单·语言与合规 | 4 | 4 |
-| 回归 | 8 | 8 |
-| **合计** | **67** | **67** |
+| 分组 | 通过 | 跳过 | 合计 |
+|---|---|---|---|
+| 正例 | 7 | 0 | 7 |
+| 负例 | 25 | 0 | 25 |
+| 边界 | 8 | 0 | 8 |
+| 验收清单·结构 | 8 | 0 | 8 |
+| 验收清单·行为 | 1 | 0 | 1 |
+| 验收清单·内容 | 6 | 0 | 6 |
+| 验收清单·语言与合规 | 4 | 0 | 4 |
+| 回归 | 8 | 0 | 8 |
+| 工具链 | 3 | 0 | 3 |
+| **合计** | **70** | **0** | **70** |
 
 未通过用例：无
+跳过用例：无
 
 ## 正例
 
@@ -268,7 +271,7 @@ L-12 [阻断]
 L-13 [阻断]
   违规对象：AN-01
   问题：锚点 value 未填写（配置管理器 current branch 版本与生命周期）
-  修复建议：访问 learn.microsoft.com/mem/configmgr 核实后填写 value 与 verified_on
+  修复建议：访问 learn.microsoft.com/intune/configmgr/core/servers/manage/updates 核实后填写 value 与 verified_on
 ```
 
 **N-15**
@@ -277,7 +280,7 @@ L-13 [阻断]
 L-13 [阻断]
   违规对象：AN-01
   问题：锚点 verified_on 距今 200 天，超过 90 天（配置管理器 current branch 版本与生命周期）
-  修复建议：访问 learn.microsoft.com/mem/configmgr 核实后填写 value 与 verified_on
+  修复建议：访问 learn.microsoft.com/intune/configmgr/core/servers/manage/updates 核实后填写 value 与 verified_on
 ```
 
 **N-16**
@@ -459,7 +462,7 @@ L-16 [阻断]
 **B-08**
 
 ```text
-5.1：PSVersion=7.6.1 failures=0
+5.1：PSVersion=5.1.26100.2161 failures=0
 7：PSVersion=7.6.1 failures=0
 ```
 
@@ -492,7 +495,7 @@ L-16 [阻断]
 | K-02 | glossary.md ≥120 组 | 通过 | ✔ 术语 149 组，四列 |
 | K-03 | jp-business-practice.md 五节齐全，文化摩擦 ≥10 条，退回原因 ≥8 条 | 通过 | ✔ 五节齐全<br>✔ 文化摩擦 12 条<br>✔ 退回原因 10 条 |
 | K-04 | 三份项目参考的失败模式条目数达标（12/12/10），审查问题 ≥15 | 通过 | ✔ {'sccm-deployment.md': 17, 'ad-consolidation.md': 14, 'entra-connect-cloud.md': 11}<br>✔ 审查问题 20 条<br>✔ 各参考七节齐全 |
-| K-05 | 三份成品方案书满足 03 第 3 节篇幅下限 | 通过 | ✔ a-sccm：各章 [850, 641, 543, 652, 778, 435, 738, 836, 694, 404, 393] ≥ [400, 500, 500, 600, 500, 300, 600, 500, 400, 300, 300]；合计 6964 ≥ 4900<br>✔ b-admerge：各章 [1321, 748, 626, 900, 743, 426, 729, 802, 771, 407, 409] ≥ [700, 700, 600, 900, 600, 400, 700, 600, 700, 350, 350]；合计 7882 ≥ 6600<br>✔ c-entraconnect：各章 [1190, 585, 559, 909, 652, 440, 376, 744, 738, 406, 409] ≥ [600, 400, 500, 700, 400, 300, 350, 500, 500, 300, 300]；合计 7008 ≥ 4850 |
+| K-05 | 三份成品方案书满足 03 第 3 节篇幅下限 | 通过 | ✔ a-sccm：各章 [850, 641, 543, 652, 778, 435, 738, 836, 694, 404, 393] ≥ [400, 500, 500, 600, 500, 300, 600, 500, 400, 300, 300]；合计 6964 ≥ 4900<br>✔ b-admerge：各章 [1443, 745, 626, 900, 743, 426, 729, 1014, 771, 407, 409] ≥ [700, 700, 600, 900, 600, 400, 700, 600, 700, 350, 350]；合计 8213 ≥ 6600<br>✔ c-entraconnect：各章 [1190, 585, 634, 909, 652, 440, 376, 744, 738, 406, 409] ≥ [600, 400, 500, 700, 400, 300, 350, 500, 500, 300, 300]；合计 7083 ≥ 4850 |
 | K-06 | 三份成品方案书各自的必写小节齐全 | 通过 | ✔ C-01 必写小节缺失：无<br>✔ C-02 必写小节缺失：无<br>✔ C-03 必写小节缺失：无<br>✔ A 第 9 章区分「停止后续波次」与「客户端卸载」<br>✔ C 第 9 章区分「暂存模式切换回退」与「同步方式回退」 |
 
 <details><summary>输出摘录</summary>
@@ -501,8 +504,8 @@ L-16 [阻断]
 
 ```text
 a-sccm 合计 6964/4900
-b-admerge 合计 7882/6600
-c-entraconnect 合计 7008/4850
+b-admerge 合计 8213/6600
+c-entraconnect 合计 7083/4850
 ```
 
 </details>
@@ -511,9 +514,9 @@ c-entraconnect 合计 7008/4850
 
 | 用例 | 内容 | 结果 | 断言 |
 |---|---|---|---|
-| L-01 | 正文中文，仅 6 类固定版式字段为日文 | 通过 | ✔ C-01 固定版式字段 ['approval_header', 'closing', 'confidentiality', 'date', 'issuer', 'recipient', 'revision_header']<br>✔ C-01 正文假名占比 180/9964（仅术语注释）<br>✔ C-02 固定版式字段 ['approval_header', 'closing', 'confidentiality', 'date', 'issuer', 'recipient', 'revision_header']<br>✔ C-02 正文假名占比 234/11203（仅术语注释）<br>✔ C-03 固定版式字段 ['approval_header', 'closing', 'confidentiality', 'date', 'issuer', 'recipient', 'revision_header']<br>✔ C-03 正文假名占比 178/9915（仅术语注释） |
+| L-01 | 正文中文，仅 6 类固定版式字段为日文 | 通过 | ✔ C-01 固定版式字段 ['approval_header', 'closing', 'confidentiality', 'date', 'issuer', 'recipient', 'revision_header']<br>✔ C-01 正文假名占比 180/9964（仅术语注释）<br>✔ C-02 固定版式字段 ['approval_header', 'closing', 'confidentiality', 'date', 'issuer', 'recipient', 'revision_header']<br>✔ C-02 正文假名占比 241/11854（仅术语注释）<br>✔ C-03 固定版式字段 ['approval_header', 'closing', 'confidentiality', 'date', 'issuer', 'recipient', 'revision_header']<br>✔ C-03 正文假名占比 178/10309（仅术语注释） |
 | L-02 | 无硬编码版本号、生命周期日期、端点域名（静态扫描 S-01） | 通过 | ✔ S-01 无报告 |
-| L-03 | 无真实客户名、真实 IP、真实域名 | 通过 | ✔ 命中 无（示例客户名均为代号；示例出站端点用保留后缀 .example） |
+| L-03 | 无真实客户名、真实 IP、真实域名 | 通过 | ✔ 命中 无（示例客户名均为代号；示例出站端点为微软公开服务端点，非客户域名） |
 | L-04 | labgen.py 产物：随机口令、无 0.0.0.0/0 入站、README 首行声明 | 通过 | ✔ 生成成功<br>✔ 口令由 random_password 生成，无固定口令<br>✔ 入站源仅为 var.mgmt_cidr<br>✔ --mgmt-cidr 0.0.0.0/0 被拒绝（退出码 2）<br>✔ README 首行有「仅用于验证」声明 |
 
 ## 回归
@@ -607,6 +610,67 @@ R3 [提示]
 
 </details>
 
+## 工具链
+
+| 用例 | 内容 | 结果 | 断言 |
+|---|---|---|---|
+| X-01 | mermaid-cli 实际渲染全部图表 | 通过 | ✔ C-01：3 张图全部生成 svg 且无语法错误（失败：无）<br>✔ C-02：3 张图全部生成 svg 且无语法错误（失败：无）<br>✔ C-03：4 张图全部生成 svg 且无语法错误（失败：无） |
+| X-02 | labgen 产物通过 terraform validate，变量校验拒绝全网来源 | 通过 | ✔ sccm：init/validate/fmt 均成功<br>✔ admerge：init/validate/fmt 均成功<br>✔ entraconnect：init/validate/fmt 均成功<br>✔ mgmt_cidr=192.0.2.0/24 被接受<br>✔ mgmt_cidr=0.0.0.0/0 被拒绝<br>✔ mgmt_cidr=* 被拒绝<br>✔ mgmt_cidr=Internet 被拒绝 |
+| X-03 | PowerShell 依赖模块脚本（替身模块，非真实环境） | 通过 | ✔ powershell：7 个脚本在替身模块下判定与 CSV 列名正确<br>✔ pwsh：7 个脚本在替身模块下判定与 CSV 列名正确 |
+
+<details><summary>输出摘录</summary>
+
+**X-01**
+
+```text
+[diagram] ok
+  boundary-collection.mmd → boundary-collection.svg
+  org-structure.mmd → org-structure.svg
+  rollout-phases.mmd → rollout-phases.svg
+[diagram] ok
+  ad-topology.mmd → ad-topology.svg
+  org-structure.mmd → org-structure.svg
+  rollout-phases.mmd → rollout-phases.svg
+[diagram] ok
+  ad-topology.mmd → ad-topology.svg
+  org-structure.mmd → org-structure.svg
+  rollout-phases.mmd → rollout-phases.svg
+  sync-flow.mmd → sync-flow.svg
+```
+
+**X-02**
+
+```text
+sccm: Success! The configuration is valid.
+admerge: Success! The configuration is valid.
+entraconnect: Success! The configuration is valid.
+```
+
+**X-03**
+
+```text
+[powershell]
+OK   forest-inventory（2 行）
+OK   account-mapping（3 行）
+OK   sidhistory-audit（2 行）
+OK   collection-members（2 行）
+OK   client-push-readiness（1 行）
+OK   sync-status（3 行）
+OK   outbound-endpoints（1 行）
+MOCK PSVersion=5.1.26100.2161 failures=0
+[pwsh]
+OK   forest-inventory（2 行）
+OK   account-mapping（3 行）
+OK   sidhistory-audit（2 行）
+OK   collection-members（2 行）
+OK   client-push-readiness（1 行）
+OK   sync-status（3 行）
+OK   outbound-endpoints（1 行）
+MOCK PSVersion=7.6.1 failures=0
+```
+
+</details>
+
 ## 说明
 
 - 负例断言均同时检查退出码、规则 ID 与对象名（06 第 3 节要求），不只校验退出码。
@@ -614,3 +678,5 @@ R3 [提示]
 - N-05、N-09 的构造输入同时违反 schema（缺键 / 少于三项），`render.py` 以退出码 2 拒绝渲染，`lint.py` 仍对配置执行规则并报出 L-04 / L-09。
 - B-02 只验证规格要求的三点（开关生效、L-10 仍校验、L-17 失效）；长段正文的日文化不在模板内实现，见 IMPLEMENTATION_NOTES 已知限制。
 - R3（财年边界）在三份示例中均有提示级输出，属设计内行为，不阻断；对应风险条目由渲染自动派生。
+- 工具链 X-03 用测试替身模块代替 ActiveDirectory / ConfigurationManager / ADSync，验证的是脚本逻辑、判定与 CSV 列名，不等于在真实客户环境实测。
+- 示例配置中的锚点值为 2026-11-11 在微软官方文档核实的结果，90 天后（2027-02-09 起）L-13 会判为过期，须重新核实。

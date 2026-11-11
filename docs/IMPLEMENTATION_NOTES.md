@@ -13,7 +13,8 @@
 | 共享安装 | `skills/ringi-kit/`（从仓库固定提交复制的发布副本，不含 tests/docs），8 个客户端目录以 Junction 指向它 |
 | 验收记录 | `projects/微软方案书制作skill/`：`TEST_REPORT.md`、`IMPLEMENTATION_NOTES.md`、`work/`（渲染与测试输出） |
 | 运行环境 | Python 3.12.10 + Jinja2 3.1.6 + PyYAML 6.0.3；Windows PowerShell 5.1.26100 与 PowerShell 7.6.1 |
-| 测试结果 | 67/67 通过（06 规定用例 59 项 + 审查回归 8 项），见 `TEST_REPORT.md` |
+| 测试结果 | 70/70 通过（06 规定用例 59 项 + 审查回归 8 项 + 工具链 3 项），见 `TEST_REPORT.md` |
+| Laptop | My Lord 2026-11-11 决定：Laptop 是笔记本，少装东西，不建入口、不做验证 |
 
 ## 2. 七阶段执行记录
 
@@ -130,26 +131,42 @@
 | 13 | S-01 对含锚点注释的整行豁免 | 只剔除锚点注释本身再扫描 | R-04 |
 | 14 | `--only` 与 deliverables 无交集时报成功 | 报错退出码 2 | R-05 |
 
+## 6.2 第二轮补完（2026-11-11）
+
+| 事项 | 做法 | 结果 |
+|---|---|---|
+| 6 个核查锚点 | 子 Agent 只读查阅微软官方文档，三份示例的锚点改为核实结果，verified_on 为 2026-11-11 | 已填写；2027-02-09 起 L-13 会判过期，须重新核实 |
+| AN-05 历史 SID | 官方文档未见历史 SID 自动过期机制；180 天是逻辑删除对象保存期限（较新林的默认值，旧林与未设值时为 60 天） | 修正 `ad-consolidation.md` 4.2 与 F-042、方案书 8.2：到期日改为「项目书面设定的回收日」，删除「目录服务默认存活期限约 180 天」的说法。这是对 04 第 4.2 节原文的事实更正 |
+| AN-04 迁移工具 | 官方工具 3.2 已弃用、仅 best effort 支持 | 示例 B 的 R-06 改为高可能性并写明替代路径；方案书 1.1 前提补「已弃用时须在方式决裁前验证可用性」 |
+| 示例 C 出站端点 | 原为 `.example` 演示域名 | 改为官方文档列出的公开端点（注明须按 AN-06 重新核实完整清单） |
+| mermaid-cli | 安装到 `%LOCALAPPDATA%/Aki/runtimes/mermaid-cli`（12.2.0），不下载 Chromium，用本机 Edge 渲染 | 三类项目共 10 张图全部渲染成功、无语法错误。人工查看后修正：B 的差异图把重叠的两条连线合并为一条；推进图时间轴改为年-月 |
+| Terraform | 安装到 `%LOCALAPPDATA%/Aki/runtimes/terraform`（1.17.2，SHA256 与官方一致），provider 缓存在同目录 | 三类实验环境 init / validate / fmt 均通过；`mgmt_cidr` 对 0.0.0.0/0、`*`、`Internet`、`0.0.0.0`、`::/0` 均拒绝 |
+| PowerShell 依赖模块脚本 | 写测试替身模块（tests/ps_mock），在 5.1 与 7 下各跑 7 个脚本 | 全部通过。发现并修正一个真实缺陷：`Export-CollectionMembers.ps1` 恢复目录时未用 `-LiteralPath`，路径含方括号时失败 |
+| 测试程序 | 新增「工具链」分组 X-01～X-03；工具缺失时记为跳过、不计通过；Windows PowerShell 固定用系统路径 | 发现上一轮 B-08 的「5.1」实际调用了 PATH 中转发到 7 的同名 `.BAT`，本轮已更正并确认两个版本都实际执行 |
+| `diagram.py` | 新增 `--puppeteer-config`；mmdc 与配置可用环境变量 `RINGI_MMDC`、`RINGI_PUPPETEER_CONFIG` 指定 | — |
+
 ## 7. 已知限制
 
 - `deliverables.language: ja` 只切换章节标题与附加章节标题，类型相关的长段正文仍是中文模板文字；L-03 在日文模式下计入假名。完整日文正文需 Agent 渲染后翻译，再重跑 lint。
 - 年号换算内置令和、平成；改元时须更新 `render.py` 的 `wareki()`。
 - lint 不校验图内数字与正文表格数字的一致性（03 第 7 节已明示，靠人工复核）。
-- PowerShell 层只做了静态解析与不依赖客户环境的冒烟测试（边界差集、端口探测、`-WhatIf`）。依赖 ConfigurationManager、ActiveDirectory、ADSync 模块的脚本需在具备这些模块的环境中实测。
-- `labgen.py` 只支持 Azure；Terraform 与 Ansible 文件未在本机执行 `terraform validate`（本机未安装 Terraform）。
-- 本机没有 mermaid-cli，`figures/` 只有 `.mmd` 源码；方案书引用的 `.svg` 需安装 mermaid-cli 后执行 `diagram.py`，或手工渲染。
-- `render.py` 约 1180 行，超过个人编码规范的 800 行建议；为保持 02 第 1 节目录树一致，没有拆出额外模块（lint、calendar_check 直接复用 render 中的公共函数）。
+- 依赖 ConfigurationManager、ActiveDirectory、ADSync 模块的 PowerShell 脚本只在测试替身模块下验证了逻辑与输出；没有真实的配置管理器站点、域控或同步服务器可测，首次在客户环境使用时须先在验证环境执行一次。
+- 实验环境模板通过了 `terraform validate`，但没有执行 `terraform plan/apply`（需要云订阅与凭据，且会产生费用）。
+- 示例中的锚点值核实于 2026-11-11，2027-02-09 起过期；真实项目每次生成前须重新核实。
+- `render.py` 约 1180 行，超过个人编码规范的 800 行建议；为保持 02 第 1 节目录树一致，没有拆出额外模块。
 
-## 8. 待人工核实锚点（真实使用前必须逐项填写）
+## 8. 核查锚点核实结果（2026-11-11，来源均为 learn.microsoft.com）
 
-| 锚点 | 核实对象 | 核实来源 | 示例中的状态 |
-|---|---|---|---|
-| AN-01 | 配置管理器 current branch 版本与生命周期 | learn.microsoft.com/mem/configmgr | 形式占位（A 适用） |
-| AN-02 | 客户端支持的操作系统版本矩阵 | learn.microsoft.com/mem/configmgr | 形式占位（A 适用） |
-| AN-03 | 目录服务功能级别支持矩阵 | learn.microsoft.com | 形式占位（A/B/C 适用） |
-| AN-04 | 移行工具官方支持状态与版本要求 | learn.microsoft.com | 形式占位（B 适用） |
-| AN-05 | 历史 SID 默认存活期限与配置项（含所属机制） | learn.microsoft.com | 形式占位（B 适用） |
-| AN-06 | 同步服务出站端点清单与支持的服务器操作系统 | learn.microsoft.com | 形式占位（C 适用） |
+| 锚点 | 核实结果要点 | 来源页面 |
+|---|---|---|
+| AN-01 | 受支持版本 2609 / 2603 / 2509，各支持 18 个月；2503 已于 2026-09-30 结束支持 | intune/configmgr/core/servers/manage/updates |
+| AN-02 | Windows 11 26H2（仅 2603 起）、25H2、24H2、23H2；Windows 10 仅 22H2（ESU）与 LTSB/LTSC | configmgr/core/plan-design/configs/supported-operating-systems-for-clients-and-devices |
+| AN-03 | 功能级别 WS2025 / WS2016 / WS2012 R2；WS2025 域控不支持 2012 R2 级别 | windows-server/identity/ad-ds/active-directory-functional-levels |
+| AN-04 | 官方迁移工具 3.2 已弃用，无修复，best effort 支持 | troubleshoot/windows-server/identity/support-policy-and-known-issues-for-admt |
+| AN-05 | 历史 SID 无自动过期；180 天为逻辑删除期限；SID 筛选默认值官方页面描述不一致 | windows/win32/adschema/a-sidhistory 等 |
+| AN-06 | 出站端点清单、可经代理；推荐 WS2025 / WS2022；最新 2.6.92.0，2027-04-07 前须升级至 2.6.84.0 以上并改用应用程序身份验证 | entra/identity/hybrid/connect/how-to-connect-install-prerequisites 等 |
+
+完整值见三份示例的 `anchors`。真实项目须按客户环境重新核实并填写。
 
 ## 实现状态
 
@@ -160,7 +177,7 @@
 - templates：8 主 + 5 partial，完成；assets 5 个图表模板，完成
 - scripts：6 个 Python + 4 类 PowerShell（common 模块 + sccm/ad/entraconnect 各 3 个脚本），完成
 - 示例：3/3，均已通过 lint 与 calendar_check
-- 用例：正例 7/7，负例 25/25，边界 8/8（验收清单 19/19，审查回归 8/8）
-- 待人工核实锚点：6 项（见第 8 节）
-- 已知限制：日文正文需 Agent 翻译；PowerShell 依赖模块的脚本未在真实环境实测；本机无 mermaid-cli 与 Terraform
+- 用例：正例 7/7，负例 25/25，边界 8/8（验收清单 19/19，审查回归 8/8，工具链 3/3）
+- 核查锚点：6 项已于 2026-11-11 核实并填入示例（见第 8 节），2027-02-09 起须重新核实
+- 已知限制：日文正文需 Agent 翻译；PowerShell 依赖模块的脚本仅在替身模块下验证；实验环境未执行 plan/apply
 ```

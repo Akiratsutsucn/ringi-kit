@@ -17,8 +17,7 @@ flowchart LR
   end
 {% for d in current_state.domains %}
 {% if not loop.first %}
-  D{{ loop.index }} ==>|用户与计算机迁入| T1
-  D{{ loop.index }} -.->|迁移期间林间信任| T1
+  D{{ loop.index }} ==>|用户与计算机迁入；迁移期间保留林间信任| T1
 {% endif %}
 {% endfor %}
   D1 -->|保留并扩展| T1

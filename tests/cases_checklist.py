@@ -180,10 +180,12 @@ def language() -> None:
     leaks = []
     for p in list((C.kit / "examples").rglob("*.yaml")) + list((C.kit / "templates").rglob("*.j2")) + list((C.kit / "references").glob("*.md")):
         for no, ln in enumerate(p.read_text(encoding="utf-8").splitlines(), 1):
+            if p.suffix == ".yaml" and ln.lstrip().startswith("- {id: \"AN-"):
+                continue  # 锚点值是官方文档核实结果（含产品版本号，如四段式同步服务版本），按 07 第 4 节允许出现在 examples
             if real.search(ln):
                 leaks.append(f"{p.name}:{no}")
     record("L-03", "验收清单·语言与合规", "无真实客户名、真实 IP、真实域名",
-           [(f"命中 {leaks or '无'}（示例客户名均为代号；示例出站端点用保留后缀 .example）", not leaks)])
+           [(f"命中 {leaks or '无'}（示例客户名均为代号；示例出站端点为微软公开服务端点，非客户域名）", not leaks)])
     lab = C.work / "L-04" / "lab"
     rc, _o = run("labgen.py", "--type", "entraconnect", "--out", lab, "--mgmt-cidr", "192.0.2.0/24")
     rc0, out0 = run("labgen.py", "--type", "entraconnect", "--out", C.work / "L-04" / "lab0", "--mgmt-cidr", "0.0.0.0/0")

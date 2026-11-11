@@ -27,7 +27,9 @@ python scripts/calendar_check.py --config <项目>/project.yaml --build <项目>
 
 - Python 3.10+，仅标准库 + Jinja2 + PyYAML；不访问网络。
 - PowerShell 层兼容 Windows PowerShell 5.1 与 PowerShell 7，全部为只读盘点与前置检查。
-- 可选：mermaid-cli（`mmdc`）用于把 `figures/*.mmd` 渲染为 svg；缺失时 `diagram.py` 降级并提示。
+- 可选：mermaid-cli（`mmdc`）用于把 `figures/*.mmd` 渲染为 svg；缺失时 `diagram.py` 降级并提示。用本机 Edge/Chrome 渲染时以 `--puppeteer-config` 指定浏览器路径。
+- 可选：Terraform，用于检查 `labgen.py` 生成的实验环境模板。
+- 测试：`python tests/run_tests.py`。mermaid-cli、Terraform 可用环境变量 `RINGI_MMDC`、`RINGI_PUPPETEER_CONFIG`、`RINGI_TERRAFORM` 指定；找不到时工具链用例记为跳过。
 
 ## 目录
 

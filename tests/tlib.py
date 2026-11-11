@@ -65,11 +65,13 @@ def lint_only(cfg_path: Path, build: Path, kit: Path | None = None, *extra) -> t
     return run("lint.py", "--build", build, "--config", cfg_path, *extra, kit=kit)
 
 
-def record(cid: str, group: str, title: str, checks: list[tuple[str, bool]], evidence: str = "") -> None:
-    ok = all(c[1] for c in checks)
-    RESULTS.append({"id": cid, "group": group, "title": title, "passed": ok,
+def record(cid: str, group: str, title: str, checks: list[tuple[str, bool]], evidence: str = "",
+           skipped: str | None = None) -> None:
+    """skipped 为跳过原因（外部工具不存在时）；跳过不计为通过。"""
+    ok = (not skipped) and all(c[1] for c in checks)
+    RESULTS.append({"id": cid, "group": group, "title": title, "passed": ok, "skipped": skipped,
                     "checks": [{"desc": d, "ok": bool(v)} for d, v in checks], "evidence": evidence.strip()[:900]})
-    print(f"{'PASS' if ok else 'FAIL'} {cid} {title}")
+    print(f"{'SKIP' if skipped else ('PASS' if ok else 'FAIL')} {cid} {title}" + (f"（{skipped}）" if skipped else ""))
     for d, v in checks:
         if not v:
             print(f"     ✗ {d}")
@@ -113,3 +115,12 @@ def has(out: str, *needles: str) -> bool:
 EXAMPLES = {"a-sccm": "project-a-sccm", "b-admerge": "project-b-admerge", "c-entraconnect": "project-c-entraconnect"}
 DELIVERABLES = ["01_提案書.md", "02_稟議用サマリ.md", "03_実施手順書.md", "04_WBS.csv", "05_リスク台帳.csv",
                 "06_受入試験項目表.csv", "07_想定質問集.md", "08_週次議事録雛形.md"]
+
+
+def ps_exe(name: str) -> str | None:
+    """powershell → 系统自带 Windows PowerShell 5.1（不用 PATH，PATH 里可能有转发到 7 的同名 .BAT）；pwsh → PowerShell 7。"""
+    import shutil
+    if name == "powershell":
+        exe = Path(os.environ.get("SystemRoot", r"C:\Windows")) / "System32" / "WindowsPowerShell" / "v1.0" / "powershell.exe"
+        return str(exe) if exe.is_file() else None
+    return shutil.which(name)
