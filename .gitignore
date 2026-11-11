@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.work/
+build/
+lab/
+*.tfstate*
+.terraform/
+terraform.tfvars

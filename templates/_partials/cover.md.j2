@@ -1,0 +1,20 @@
+{# 封面：收件敬称、发文方、公历+年号日期、机密等级。值全部来自 fact model；调用方须先 set doc_title 与 doc_no。 #}
+<!-- 固定版式字段：请勿改写 --><!-- FIELD:confidentiality -->
+{{ project.confidentiality }}
+
+<!-- 固定版式字段：请勿改写 --><!-- FIELD:recipient -->
+{{ project.client_display_name }}
+
+# {{ doc_title }}
+
+文件编号：{{ project.code }}-{{ doc_no }}　版数：{{ revision_history[-1].version }}
+
+<!-- 固定版式字段：请勿改写 --><!-- FIELD:date -->
+{{ doc.issue_date }}
+
+<!-- 固定版式字段：请勿改写 --><!-- FIELD:issuer -->
+{{ project.issuer }}
+
+{{ doc.lint_status }}
+
+---

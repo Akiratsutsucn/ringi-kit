@@ -1,0 +1,4 @@
+风险ID,类别,描述,触发条件,影响,可能性,缓解措施,责任人,关联任务,状态
+{% for r in risks.list %}
+{{ r.id | csv }},{{ r.category | csv }},{{ r.description | csv }},{{ r.trigger | csv }},{{ r.impact | csv }},{{ r.likelihood | csv }},{{ r.mitigation | csv }},{{ r.owner | csv }},{{ r.related_task | csv }},{{ r.status | csv }}
+{% endfor %}

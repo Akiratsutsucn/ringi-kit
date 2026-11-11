@@ -1,0 +1,28 @@
+%% {{ doc.figure["boundary-collection"].number }} {{ doc.figure["boundary-collection"].title }}（数据来源：project.yaml current_state.endpoints、rollout）
+flowchart LR
+  subgraph SITE["站点服务器与站点系统角色"]
+    SS["站点服务器"]
+    MP["管理点"]
+    DP["分发点"]
+  end
+  subgraph BG["边界组（启用站点分配与内容定位）"]
+{% for s in current_state.sites %}
+    BG{{ loop.index }}["边界组：{{ s.name | mm }}<br/>终端 {{ s.count }} 台"]
+{% endfor %}
+  end
+  subgraph COL["设备集合（按波次，含排除集合）"]
+{% for w in rollout %}
+    W{{ loop.index }}["{{ w.id }} {{ w.name | mm }}<br/>{{ w.scope | mm }}<br/>{{ w.count }} 台"]
+{% endfor %}
+    EX["排除集合：服务器与特殊用途终端"]
+  end
+{% for s in current_state.sites %}
+  BG{{ loop.index }} -->|站点分配| MP
+  BG{{ loop.index }} -->|内容定位| DP
+{% endfor %}
+  SS --> MP
+  SS --> DP
+{% for w in rollout %}
+  SS -->|部署| W{{ loop.index }}
+{% endfor %}
+  EX -.->|排除| COL

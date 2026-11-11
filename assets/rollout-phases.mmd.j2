@@ -1,0 +1,23 @@
+%% {{ doc.figure["rollout-phases"].number }} {{ doc.figure["rollout-phases"].title }}（数据来源：project.yaml schedule、rollout、jp.freeze_windows）
+gantt
+  title {{ doc.figure["rollout-phases"].title | mm }}
+  dateFormat YYYY-MM-DD
+  axisFormat %m-%d
+  section 阶段与承认缓冲
+{% for r in schedule.wbs if r.phase != "里程碑" and r.phase != "铺装/迁移波次" %}
+  {{ r.name | mm }} :{{ "crit, " if r.phase == "承认" else "" }}wbs{{ loop.index }}, {{ r.start }}, {{ r.end }}
+{% endfor %}
+  section 波次
+{% for w in rollout %}
+  {{ w.id }} {{ w.name | mm }} :active, wave{{ loop.index }}, {{ w.start }}, {{ w.end }}
+{% endfor %}
+  section 里程碑与 Gate
+{% for m in schedule.milestones %}
+  {{ m.name | mm }}{{ "（承认）" if m.approval else "" }} :milestone, ms{{ loop.index }}, {{ m.date }}, 0d
+{% endfor %}
+  {{ gates[0].id }} 判定 :milestone, gate1, {{ rollout[0].start }}, 0d
+  上线 :milestone, golive, {{ schedule.go_live }}, 0d
+  section 冻结期（不安排变更）
+{% for w in jp.freeze_windows %}
+  {{ w.name | mm }} :crit, fz{{ loop.index }}, {{ w.start }}, {{ w.end }}
+{% endfor %}

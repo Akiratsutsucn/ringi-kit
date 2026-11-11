@@ -1,0 +1,1458 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ringi-kit/project.schema.json",
+  "title": "ringi-kit project.yaml",
+  "description": "面向日本企业的三类 IT 基础设施交付项目配置。键名以 02 设计规格书第 5 节为准；扩展键见 IMPLEMENTATION_NOTES.md。内容完备性（非空、可判定）由 lint.py 判定，schema 只判定结构与类型。",
+  "type": "object",
+  "required": [
+    "project",
+    "jp",
+    "current_state",
+    "targets",
+    "schedule",
+    "rollout",
+    "comparison",
+    "risks",
+    "steps",
+    "gates",
+    "acceptance",
+    "impact",
+    "cutover",
+    "escalation",
+    "pilot",
+    "phases",
+    "pre_communication",
+    "open_items",
+    "revision_history",
+    "deliverables",
+    "anchors",
+    "assumptions"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "placeholder": {
+      "const": "<待填写>"
+    },
+    "text": {
+      "type": "string"
+    },
+    "date": {
+      "type": "string",
+      "pattern": "^(\\d{4}-\\d{2}-\\d{2}|<待填写>)$"
+    },
+    "textList": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "score": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        {
+          "$ref": "#/$defs/placeholder"
+        }
+      ]
+    },
+    "override": {
+      "type": "object",
+      "required": [
+        "task_id",
+        "reason",
+        "approved_by"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "task_id": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "approved_by": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "properties": {
+    "project": {
+      "type": "object",
+      "required": [
+        "code",
+        "client_name",
+        "client_display_name",
+        "issuer",
+        "industry",
+        "employee_range",
+        "sites_count",
+        "sites_distribution",
+        "project_type",
+        "confidentiality"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^([A-Za-z0-9][A-Za-z0-9_-]*|<待填写>)$"
+        },
+        "client_name": {
+          "type": "string"
+        },
+        "client_display_name": {
+          "type": "string"
+        },
+        "issuer": {
+          "type": "string"
+        },
+        "industry": {
+          "type": "string"
+        },
+        "employee_range": {
+          "type": "string"
+        },
+        "sites_count": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "$ref": "#/$defs/placeholder"
+            }
+          ]
+        },
+        "sites_distribution": {
+          "type": "string"
+        },
+        "project_type": {
+          "type": "string",
+          "enum": [
+            "sccm",
+            "admerge",
+            "entraconnect"
+          ],
+          "x-message": "project_type 仅支持三类：sccm（终端管理与客户端铺装）/ admerge（多企业 AD 合并）/ entraconnect（云端 Entra Connect）。三类之外的项目：骨架可复用，领域知识需自补，本 Skill 不生成完整方案书。"
+        },
+        "confidentiality": {
+          "type": "string",
+          "enum": [
+            "社外秘",
+            "関係者限り",
+            "社内限り",
+            "<待填写>"
+          ]
+        }
+      }
+    },
+    "jp": {
+      "type": "object",
+      "required": [
+        "fiscal_year_start_month",
+        "budget_period",
+        "approval_buffer_days",
+        "approval_nodes",
+        "freeze_windows",
+        "fiscal_boundary_months",
+        "security_review",
+        "consumer_side_check_sheet",
+        "multi_tier_vendors",
+        "vendor_tiers",
+        "decision_path",
+        "vendors"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "fiscal_year_start_month": {
+          "const": 4
+        },
+        "budget_period": {
+          "type": "string"
+        },
+        "approval_buffer_days": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "approval_nodes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "freeze_windows": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "start",
+              "end"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "start": {
+                "$ref": "#/$defs/date"
+              },
+              "end": {
+                "$ref": "#/$defs/date"
+              }
+            }
+          }
+        },
+        "fiscal_boundary_months": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12
+          }
+        },
+        "security_review": {
+          "type": "string",
+          "enum": [
+            "required",
+            "optional",
+            "<待填写>"
+          ]
+        },
+        "consumer_side_check_sheet": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "$ref": "#/$defs/placeholder"
+            }
+          ]
+        },
+        "multi_tier_vendors": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "$ref": "#/$defs/placeholder"
+            }
+          ]
+        },
+        "vendor_tiers": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "enum": [
+                2,
+                3,
+                4
+              ]
+            },
+            {
+              "$ref": "#/$defs/placeholder"
+            }
+          ]
+        },
+        "decision_path": {
+          "type": "object",
+          "required": [
+            "proposer",
+            "approver",
+            "signer"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "proposer": {
+              "type": "string"
+            },
+            "approver": {
+              "type": "string"
+            },
+            "signer": {
+              "type": "string"
+            }
+          }
+        },
+        "vendors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "tier",
+              "name",
+              "role",
+              "scope",
+              "not_doing",
+              "contact_role"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "tier": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 4
+              },
+              "name": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              },
+              "scope": {
+                "type": "string"
+              },
+              "not_doing": {
+                "type": "string"
+              },
+              "contact_role": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "current_state": {
+      "type": "object",
+      "required": [
+        "domains",
+        "cloud_tenants",
+        "endpoints",
+        "existing_tools",
+        "pain_points",
+        "unquantified"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "domains": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "forest",
+              "dc_count",
+              "functional_level"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "forest": {
+                "type": "string"
+              },
+              "dc_count": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  {
+                    "$ref": "#/$defs/placeholder"
+                  }
+                ]
+              },
+              "functional_level": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "cloud_tenants": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "user_count",
+              "sync_method"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "user_count": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  {
+                    "$ref": "#/$defs/placeholder"
+                  }
+                ]
+              },
+              "sync_method": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "password_hash",
+                  "pass_through",
+                  "federation",
+                  "<待填写>"
+                ]
+              }
+            }
+          }
+        },
+        "endpoints": {
+          "type": "object",
+          "required": [
+            "total",
+            "by_site"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "total": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "$ref": "#/$defs/placeholder"
+                }
+              ]
+            },
+            "by_site": {
+              "type": "object",
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  {
+                    "$ref": "#/$defs/placeholder"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "existing_tools": {
+          "$ref": "#/$defs/textList"
+        },
+        "pain_points": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "point",
+              "evidence"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "point": {
+                "type": "string"
+              },
+              "evidence": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "unquantified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "item",
+              "impact"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "item": {
+                "type": "string"
+              },
+              "impact": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "targets": {
+      "type": "object",
+      "required": [
+        "scope",
+        "out_of_scope",
+        "success_criteria"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "scope": {
+          "type": "string"
+        },
+        "out_of_scope": {
+          "$ref": "#/$defs/textList"
+        },
+        "success_criteria": {
+          "$ref": "#/$defs/textList"
+        }
+      }
+    },
+    "schedule": {
+      "type": "object",
+      "required": [
+        "start",
+        "go_live",
+        "milestones"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "$ref": "#/$defs/date"
+        },
+        "go_live": {
+          "$ref": "#/$defs/date"
+        },
+        "milestones": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "date",
+              "approval"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^M-\\d{2}$"
+              },
+              "name": {
+                "type": "string"
+              },
+              "date": {
+                "$ref": "#/$defs/date"
+              },
+              "approval": {
+                "type": "boolean"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "normal",
+                  "cutover",
+                  "go_live",
+                  "mass_change"
+                ]
+              }
+            }
+          }
+        },
+        "override_freeze": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/override"
+            },
+            {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/override"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "rollout": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "scope",
+          "count",
+          "start",
+          "end",
+          "business_impact",
+          "exit_criteria"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^W-\\d{2}$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "$ref": "#/$defs/placeholder"
+              }
+            ]
+          },
+          "start": {
+            "$ref": "#/$defs/date"
+          },
+          "end": {
+            "$ref": "#/$defs/date"
+          },
+          "business_impact": {
+            "type": "string"
+          },
+          "exit_criteria": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "comparison": {
+      "type": "object",
+      "required": [
+        "client_profile",
+        "options",
+        "chosen",
+        "rejected_reasons",
+        "sensitivity_note"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "client_profile": {
+          "type": "string",
+          "enum": [
+            "conservative",
+            "balanced",
+            "<待填写>"
+          ]
+        },
+        "options": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "scores"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "scores": {
+                "type": "object",
+                "required": [
+                  "cost",
+                  "risk",
+                  "duration",
+                  "impact",
+                  "scalability"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "cost": {
+                    "$ref": "#/$defs/score"
+                  },
+                  "risk": {
+                    "$ref": "#/$defs/score"
+                  },
+                  "duration": {
+                    "$ref": "#/$defs/score"
+                  },
+                  "impact": {
+                    "$ref": "#/$defs/score"
+                  },
+                  "scalability": {
+                    "$ref": "#/$defs/score"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "chosen": {
+          "type": "string"
+        },
+        "rejected_reasons": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "sensitivity_note": {
+          "type": "string"
+        }
+      }
+    },
+    "risks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "category",
+          "description",
+          "trigger",
+          "impact",
+          "likelihood",
+          "mitigation",
+          "owner",
+          "related_task",
+          "status"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^R-\\d{2}$"
+          },
+          "category": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "trigger": {
+            "type": "string"
+          },
+          "impact": {
+            "type": "string"
+          },
+          "likelihood": {
+            "type": "string",
+            "enum": [
+              "高",
+              "中",
+              "低",
+              "<待填写>"
+            ]
+          },
+          "mitigation": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "related_task": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "phase",
+          "name",
+          "preconditions",
+          "action",
+          "expected",
+          "verify",
+          "on_fail",
+          "rollback",
+          "minutes",
+          "owner_role"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[ABC]-\\d{2}-\\d{2}$"
+          },
+          "phase": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "preconditions": {
+            "$ref": "#/$defs/textList"
+          },
+          "action": {
+            "type": "string"
+          },
+          "expected": {
+            "type": "string"
+          },
+          "verify": {
+            "type": "string"
+          },
+          "on_fail": {
+            "type": "string"
+          },
+          "rollback": {
+            "type": "string"
+          },
+          "minutes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "$ref": "#/$defs/placeholder"
+              }
+            ]
+          },
+          "owner_role": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "gates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "checks",
+          "fail_action"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^G-[ABC]-\\d{2}$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "checks": {
+            "$ref": "#/$defs/textList"
+          },
+          "fail_action": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "requirement",
+          "content",
+          "method",
+          "criteria",
+          "evidence",
+          "client_confirmer",
+          "result"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^T-\\d{2}$"
+          },
+          "requirement": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          },
+          "criteria": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "string"
+          },
+          "client_confirmer": {
+            "type": "string"
+          },
+          "result": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "impact": {
+      "type": "object",
+      "required": [
+        "matrix",
+        "user_visible_changes",
+        "user_actions",
+        "user_no_actions",
+        "downtime_basis"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "matrix": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "unit",
+              "department",
+              "count",
+              "change",
+              "downtime_minutes",
+              "wave"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "unit": {
+                "type": "string"
+              },
+              "department": {
+                "type": "string"
+              },
+              "count": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  {
+                    "$ref": "#/$defs/placeholder"
+                  }
+                ]
+              },
+              "change": {
+                "type": "string"
+              },
+              "downtime_minutes": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  {
+                    "$ref": "#/$defs/placeholder"
+                  }
+                ]
+              },
+              "wave": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "user_visible_changes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "item",
+              "changed",
+              "detail"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "item": {
+                "type": "string"
+              },
+              "changed": {
+                "type": "string",
+                "enum": [
+                  "是",
+                  "否",
+                  "<待填写>"
+                ]
+              },
+              "detail": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "user_actions": {
+          "$ref": "#/$defs/textList"
+        },
+        "user_no_actions": {
+          "$ref": "#/$defs/textList"
+        },
+        "downtime_basis": {
+          "type": "string"
+        }
+      }
+    },
+    "cutover": {
+      "type": "object",
+      "required": [
+        "t_definition",
+        "checkpoints",
+        "decision_role",
+        "rollback_levels"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "t_definition": {
+          "type": "string"
+        },
+        "checkpoints": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "t_plus_minutes",
+              "expected_state",
+              "on_miss"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "t_plus_minutes": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  {
+                    "$ref": "#/$defs/placeholder"
+                  }
+                ]
+              },
+              "expected_state": {
+                "type": "string"
+              },
+              "on_miss": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "decision_role": {
+          "type": "string"
+        },
+        "rollback_levels": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "trigger",
+              "deadline",
+              "steps",
+              "minutes",
+              "end_state"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "trigger": {
+                "type": "string"
+              },
+              "deadline": {
+                "type": "string"
+              },
+              "steps": {
+                "$ref": "#/$defs/textList"
+              },
+              "minutes": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  {
+                    "$ref": "#/$defs/placeholder"
+                  }
+                ]
+              },
+              "end_state": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "escalation": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "level",
+          "condition",
+          "contact_role",
+          "within"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "level": {
+            "type": "string"
+          },
+          "condition": {
+            "type": "string"
+          },
+          "contact_role": {
+            "type": "string"
+          },
+          "within": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "pilot": {
+      "type": "object",
+      "required": [
+        "target",
+        "reason",
+        "representativeness",
+        "success_criteria",
+        "on_fail"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "target": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "representativeness": {
+          "type": "string"
+        },
+        "success_criteria": {
+          "$ref": "#/$defs/textList"
+        },
+        "on_fail": {
+          "type": "string"
+        }
+      }
+    },
+    "phases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "goal",
+          "gate",
+          "exit_criteria"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "goal": {
+            "type": "string"
+          },
+          "gate": {
+            "type": "string"
+          },
+          "exit_criteria": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "network": {
+      "type": "object",
+      "required": [
+        "outbound_endpoints",
+        "dc_connectivity",
+        "proxy"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "outbound_endpoints": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "domain",
+              "purpose",
+              "via_proxy"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "domain": {
+                "type": "string"
+              },
+              "purpose": {
+                "type": "string"
+              },
+              "via_proxy": {
+                "type": "string",
+                "enum": [
+                  "是",
+                  "否",
+                  "<待填写>"
+                ]
+              }
+            }
+          }
+        },
+        "dc_connectivity": {
+          "type": "string"
+        },
+        "proxy": {
+          "type": "string"
+        }
+      }
+    },
+    "review": {
+      "type": "object",
+      "required": [
+        "process",
+        "materials",
+        "duration_estimate",
+        "likely_questions"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "process": {
+          "type": "string"
+        },
+        "materials": {
+          "$ref": "#/$defs/textList"
+        },
+        "duration_estimate": {
+          "type": "string"
+        },
+        "likely_questions": {
+          "$ref": "#/$defs/textList"
+        }
+      }
+    },
+    "pre_communication": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "date",
+          "department",
+          "person_role",
+          "content",
+          "conclusion",
+          "follow_up"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "date": {
+            "$ref": "#/$defs/date"
+          },
+          "department": {
+            "type": "string"
+          },
+          "person_role": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "conclusion": {
+            "type": "string"
+          },
+          "follow_up": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "open_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "content",
+          "owner",
+          "due",
+          "chapter"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "content": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "due": {
+            "type": "string"
+          },
+          "chapter": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "revision_history": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "version",
+          "date",
+          "change",
+          "author",
+          "approver"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "type": "string",
+            "pattern": "^(V\\d+\\.\\d+|<待填写>)$"
+          },
+          "date": {
+            "$ref": "#/$defs/date"
+          },
+          "change": {
+            "type": "string"
+          },
+          "author": {
+            "type": "string"
+          },
+          "approver": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "deliverables": {
+      "type": "object",
+      "required": [
+        "items",
+        "language",
+        "format"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "proposal",
+              "approval_summary",
+              "runbook",
+              "wbs",
+              "risk",
+              "test_matrix",
+              "qa",
+              "meeting_minutes",
+              "diagrams"
+            ]
+          }
+        },
+        "language": {
+          "type": "string",
+          "enum": [
+            "zh",
+            "ja",
+            "<待填写>"
+          ]
+        },
+        "format": {
+          "type": "string"
+        }
+      }
+    },
+    "anchors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "topic",
+          "source",
+          "value",
+          "verified_on"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^AN-\\d{2}$"
+          },
+          "topic": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "verified_on": {
+            "type": "string",
+            "pattern": "^(\\d{4}-\\d{2}-\\d{2})?$"
+          }
+        }
+      }
+    },
+    "glossary_overrides": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "template_override": {
+      "type": "string"
+    },
+    "assumptions_mode": {
+      "type": "boolean"
+    },
+    "assumptions": {
+      "$ref": "#/$defs/textList"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "project": {
+            "properties": {
+              "project_type": {
+                "const": "entraconnect"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "network",
+          "review"
+        ]
+      }
+    }
+  ]
+}

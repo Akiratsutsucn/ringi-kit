@@ -1,0 +1,4 @@
+验收ID,对应需求,验收内容,验收方法,判定基准,证据形式,客户确认人,结果
+{% for a in acceptance %}
+{{ a.id | csv }},{{ a.requirement | csv }},{{ a.content | csv }},{{ a.method | csv }},{{ a.criteria | csv }},{{ a.evidence | csv }},{{ a.client_confirmer | csv }},{{ a.result | csv }}
+{% endfor %}

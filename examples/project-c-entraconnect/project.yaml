@@ -1,0 +1,277 @@
+# 示例 C：云端 Entra Connect 同步服务器搭建（附录 A-3 + 本实现的扩展键）
+# 全部为占位符与假设值，不含真实客户信息。出站端点使用保留域名 .example 演示格式，
+# 真实使用时按核查锚点 AN-06 的核实结果填写。扩展键说明见 IMPLEMENTATION_NOTES.md。
+
+project:
+  code: "PRJ-C-001"
+  client_name: "C社（代号）"
+  client_display_name: "C社 御中"
+  issuer: "自社名 ○○事業部 ○○"
+  industry: "服务业"
+  employee_range: "500-1000"
+  sites_count: 6
+  sites_distribution: "关东4 / 关西2"
+  project_type: "entraconnect"
+  confidentiality: "社外秘"
+
+jp:
+  fiscal_year_start_month: 4
+  budget_period: "2028年度上半期预算"
+  approval_buffer_days: 10
+  approval_nodes: ["内部评审", "客户评审", "信息安全部審査", "再承认"]
+  freeze_windows:
+    - {name: "年末年始", start: "2027-12-29", end: "2028-01-03"}
+    - {name: "お盆", start: "2028-08-13", end: "2028-08-16"}
+    - {name: "期末棚卸", start: "2028-03-25", end: "2028-03-31"}
+  fiscal_boundary_months: [3, 9]
+  security_review: "required"
+  consumer_side_check_sheet: true
+  multi_tier_vendors: false
+  vendor_tiers: 2
+  decision_path:
+    proposer: "C社 信息系统部 课长"
+    approver: "C社 信息安全部 部长"
+    signer: "C社 管理本部 本部长"
+  vendors:
+    - {tier: 1, name: "自社（总承包）", role: "设计、构建与审查应答", scope: "方式论证、同步服务器构建、审查材料编制、切换判定", not_doing: "不变更客户代理与防火墙配置", contact_role: "项目经理"}
+    - {tier: 2, name: "一次承包方（代号 R1）", role: "云基础设施构建", scope: "云主机与网络规则构建、监控配置", not_doing: "不直接与客户信息安全部联络", contact_role: "构建负责人"}
+
+current_state:
+  domains:
+    - {name: "corp.c-example.jp", forest: "corp", dc_count: 3, functional_level: "【待确认】"}
+  cloud_tenants:
+    - {name: "ctenant", user_count: 820, sync_method: "none"}
+  endpoints:
+    total: 900
+    by_site: {东京: 600, 大阪: 200, 其他: 100}
+  existing_tools: ["本地 Exchange（部分）", "代理服务器（强制出站）"]
+  pain_points:
+    - {point: "云侧账号与本地账号分别维护，入离职需两处操作", evidence: "【示例】上一财年入离职与调岗约 260 件，均需在两处手工处理"}
+    - {point: "云侧密码与本地密码不一致，密码重置问询多", evidence: "【示例】服务台月均密码相关问询约 45 件"}
+  unquantified:
+    - {item: "云侧已存在账号与本地账号的匹配率", impact: "决定首次同步前需人工处理的账号数，验证环境中实测"}
+    - {item: "代理服务器对出站端点的放行审批周期", impact: "影响第 6 章关键路径与审查节点"}
+
+targets:
+  scope: "在云端 IaaS 上部署单实例同步服务器，实现本地目录到云侧的单向同步（含密码哈希同步）"
+  out_of_scope:
+    - "写回（密码/组/设备写回）"
+    - "联合认证与第三方 IdP 整合"
+    - "本地 Exchange 混合部署"
+  success_criteria:
+    - "同步对象与本地目录差异 ≤0.5%"
+    - "同步周期内无失败导出/导入"
+    - "通过客户信息安全部审查"
+
+schedule:
+  start: "2028-04-01"
+  go_live: "2028-09-20"
+  milestones:
+    - {name: "要件定義完了", date: "2028-05-10", approval: true, kind: "normal"}
+    - {name: "方式決定", date: "2028-06-15", approval: true, kind: "normal"}
+    - {name: "安全審査回答提出", date: "2028-07-10", approval: true, kind: "normal"}
+    - {name: "検証環境構築完了", date: "2028-08-05", approval: true, kind: "normal"}
+    - {name: "本番切替完了", date: "2028-09-15", approval: true, kind: "cutover"}
+
+rollout:
+  - {id: "W-01", name: "首次同步与切换", scope: "全部业务用户与组（约 820 名）", count: 820, start: "2028-09-09", end: "2028-09-10", business_impact: "周末执行，首次同步后用户以本地密码登录云服务", exit_criteria: "同步对象差异 ≤0.5%，导出错误 0 件"}
+
+comparison:
+  client_profile: "conservative"
+  options:
+    - {name: "本地部署单实例", scores: {cost: 5, risk: 3, duration: 5, impact: 4, scalability: 2}}
+    - {name: "云上单实例", scores: {cost: 3, risk: 4, duration: 3, impact: 4, scalability: 4}}
+    - {name: "云上双实例 + 暂存模式", scores: {cost: 1, risk: 5, duration: 2, impact: 4, scalability: 5}}
+  chosen: "云上单实例"
+  rejected_reasons:
+    "本地部署单实例": "客户已明确『云优先』方针，本地部署需新设机房空间与硬件采购，与本财年预算期不匹配；且单实例无高可用。"
+    "云上双实例 + 暂存模式": "820 名用户的规模不支持双实例成本；且客户尚无高可用要求，本次先行单实例，预留后续扩展路径（详见第 4 章）。"
+  sensitivity_note: "若『可用性要求』提升至需 RTO<1 小时，则需重新评估双实例方案，成本将增加约一倍。"
+
+risks:
+  - {id: "R-01", category: "技术", description: "同步服务无法启动", trigger: "云主机到域控的目录服务连通不足", impact: "项目停滞", likelihood: "中", mitigation: "G-C-01 端到端端口与 RPC 探测；验证通过后再部署", owner: "基础设施工程师", related_task: "C-03-01", status: "未处理"}
+  - {id: "R-02", category: "审查", description: "安全审查退回，材料不完整", trigger: "出站端点清单缺失或用途不明", impact: "工期延长 2-4 周", likelihood: "高", mitigation: "按检查表逐项准备；出站清单含域名/用途/是否经代理三列", owner: "项目经理", related_task: "C-02-02", status: "未处理"}
+  - {id: "R-03", category: "技术", description: "防病毒导致同步引擎间歇异常", trigger: "未配置排除项", impact: "同步时断时续，极难定位", likelihood: "中", mitigation: "部署后立即配置排除项并纳入检查表", owner: "基础设施工程师", related_task: "C-03-03", status: "未处理"}
+  - {id: "R-04", category: "技术", description: "暂存模式误当备份，故障时无可用实例", trigger: "设计书将暂存模式写成恢复方案", impact: "真实故障时无退路", likelihood: "中", mitigation: "第 4 章明文『暂存模式是演练对象，不是备份』；回退方案单独设计", owner: "架构师", related_task: "C-04-02", status: "未处理"}
+  - {id: "R-05", category: "技术", description: "代理环境导致出站失败", trigger: "未配置同步服务所需代理参数", impact: "同步静默失败", likelihood: "高", mitigation: "G-C-01 包含代理连通验证；配置后在验证环境实测", owner: "基础设施工程师", related_task: "C-03-02", status: "未处理"}
+
+steps:
+  - id: "C-02-02"
+    phase: "设计"
+    name: "出站端点清单编制"
+    preconditions:
+      - "AN-06 锚点已建"
+      - "客户代理策略已取得"
+    action: "按官方文档整理出站 443 目标清单，逐项标注用途与是否可经代理"
+    expected: "CSV 含域名、用途、是否经代理三列，行数与官方清单一致"
+    verify: "与官方清单核对无遗漏"
+    on_fail: "F-050"
+    rollback: "不适用（文档编制），补充后重新提交"
+    minutes: 180
+    owner_role: "基础设施工程师"
+  - id: "C-03-01"
+    phase: "实施"
+    name: "目录服务连通性验证"
+    preconditions:
+      - "云主机已创建且网络安全组规则已按 1.3 节清单配置"
+    action: "从云主机向每个域控做端口与 RPC 端到端探测"
+    expected: "全部域控端口可达，RPC 探测成功"
+    verify: "探测结果 CSV 全部通过"
+    on_fail: "F-051"
+    rollback: "调整网络策略后重新探测"
+    minutes: 120
+    owner_role: "基础设施工程师"
+  - id: "C-03-02"
+    phase: "实施"
+    name: "代理配置与出站验证"
+    preconditions:
+      - "C-02-02 清单已完成"
+    action: "配置同步服务代理参数，逐项验证出站连通"
+    expected: "全部端点连通，无超时"
+    verify: "端点验证结果 CSV 全部通过"
+    on_fail: "F-052"
+    rollback: "回退代理配置至默认，联系客户网络团队"
+    minutes: 150
+    owner_role: "基础设施工程师"
+  - id: "C-03-03"
+    phase: "实施"
+    name: "防病毒排除项配置"
+    preconditions:
+      - "安全软件管理权限已取得"
+    action: "按官方建议配置同步引擎相关目录与进程排除项"
+    expected: "排除项生效，同步无间歇异常"
+    verify: "连续 24 小时同步无异常事件"
+    on_fail: "F-053"
+    rollback: "移除排除项并采用其他缓解手段"
+    minutes: 90
+    owner_role: "基础设施工程师"
+  - id: "C-04-02"
+    phase: "验证"
+    name: "暂存模式切换演练"
+    preconditions:
+      - "验证环境已构建"
+      - "切换手顺已评审"
+    action: "执行暂存模式切换演练，记录耗时与结果"
+    expected: "切换成功，耗时记录在案"
+    verify: "演练记录含开始/结束时刻与结果"
+    on_fail: "F-054"
+    rollback: "切回原实例，记录失败点"
+    minutes: 240
+    owner_role: "基础设施工程师"
+
+gates:
+  - id: "G-C-01"
+    name: "同步服务器上云前检查"
+    checks:
+      - "云主机到域控的目录服务连通正常"
+      - "出站 443 目标域名清单已出具（域名+用途+是否经代理）"
+      - "未与域控同机"
+      - "防病毒/EDR 排除项已配置"
+      - "时间同步正常"
+      - "暂存模式切换已演练"
+      - "财年期末与长连休已避开"
+      - "安全审查应答材料已准备"
+    fail_action: "暂停部署，逐项补齐后重新检查"
+
+acceptance:
+  - {id: "T-01", requirement: "同步对象差异 ≤0.5%", content: "比对本地目录与云侧对象", method: "对象清单差集", criteria: "差异率 ≤0.5%，差异项逐项说明", evidence: "差集报告 CSV", client_confirmer: "客户信息系统部 担当", result: ""}
+  - {id: "T-02", requirement: "同步周期无失败", content: "连续 5 个同步周期无失败导出/导入", method: "同步状态导出", criteria: "失败次数 0", evidence: "同步状态报表", client_confirmer: "客户信息系统部 担当", result: ""}
+  - {id: "T-03", requirement: "通过安全审查", content: "客户信息安全部审查通过", method: "审查结果通知", criteria: "审查结论为通过", evidence: "审查结果通知文书", client_confirmer: "客户信息安全部", result: ""}
+
+impact:
+  matrix:
+    - {unit: "全拠点", department: "全部门", count: 820, change: "云服务改用本地密码登录", downtime_minutes: 0, wave: "W-01"}
+    - {unit: "信息系统部", department: "账号管理担当", count: 4, change: "入离职只在本地目录操作", downtime_minutes: 0, wave: "W-01"}
+  user_visible_changes:
+    - {item: "云服务密码", changed: "是", detail: "首次同步后以本地密码登录云服务。"}
+    - {item: "登录名", changed: "否", detail: "云服务登录名不变。"}
+  user_actions:
+    - "切换后首个工作日以本地密码登录云服务"
+    - "无法登录时联系信息系统部服务台"
+  user_no_actions:
+    - "不需要重新安装客户端软件"
+    - "不需要变更本地密码"
+  downtime_basis: "依据验证环境实测：首次同步约 40 分钟，在周末执行；云服务登录在同步期间不中断，业务时间内中断为 0 分钟。"
+
+cutover:
+  t_definition: "正式环境首次同步开始时刻（周六 10:00）"
+  checkpoints:
+    - {t_plus_minutes: 60, expected_state: "首次完整导入与同步完成，导出错误 0 件", on_miss: "停止导出，启动暂存模式切换回退"}
+    - {t_plus_minutes: 120, expected_state: "抽样 30 名用户以本地密码登录云服务成功", on_miss: "启动暂存模式切换回退，周一前提交经过报告"}
+  decision_role: "项目经理（与 C社信息系统部课长共同判定）"
+  rollback_levels:
+    - {name: "暂存模式切换回退", trigger: "首次同步检查点未达成", deadline: "T+120 分钟", steps: ["将正式实例切为暂存模式，停止导出", "确认云侧对象未被进一步变更", "记录失败点并保留同步日志"], minutes: 30, end_state: "云侧对象停留在首次同步前状态，用户沿用原云侧密码"}
+    - {name: "同步方式回退", trigger: "密码哈希同步导致登录问题且 24 小时内无法修复", deadline: "切换后 24 小时内由客户信息系统部部长批准", steps: ["停用密码哈希同步", "通知全部用户恢复使用原云侧密码", "服务台按通知模板受理问询"], minutes: 90, end_state: "用户恢复原云侧密码登录，本地与云侧密码重新分离"}
+
+escalation:
+  - {level: "一级", condition: "个别用户登录问询", contact_role: "信息系统部服务台", within: "受理后 1 小时内答复"}
+  - {level: "二级", condition: "同步错误或 10 名以上用户无法登录", contact_role: "构建负责人", within: "30 分钟内首报"}
+  - {level: "三级", condition: "检查点未达成或回退判定", contact_role: "项目经理 → C社信息系统部课长", within: "15 分钟内首报"}
+
+pilot:
+  target: "验证环境（复制正式目录结构的测试组织单位，约 50 个对象）"
+  reason: "正式切换前在隔离环境验证连通、代理、防病毒排除与暂存模式切换，不影响正式用户"
+  representativeness: "包含普通用户、离职停用用户、同名用户三类对象，覆盖匹配失败的典型情形"
+  success_criteria:
+    - "全部域控端口与 RPC 探测通过"
+    - "全部出站端点经代理连通"
+    - "暂存模式切换演练完成并记录耗时"
+  on_fail: "不进入正式切换；按失败模式库定位原因，修正后在验证环境复测"
+
+phases:
+  - {name: "要件定义与方式决定", goal: "确定同步范围、身份同步方式与部署形态", gate: "方式決定承认", exit_criteria: "方式决定获承认"}
+  - {name: "安全审查", goal: "提交检查表应答与通信一览并获审查通过", gate: "安全審査回答提出承认", exit_criteria: "审查结论为通过"}
+  - {name: "验证环境构建与演练", goal: "验证连通、代理、排除项与暂存模式切换", gate: "G-C-01", exit_criteria: "G-C-01 八项全部通过"}
+  - {name: "正式切换与移交", goal: "完成首次同步并移交运维", gate: "验收矩阵", exit_criteria: "T-01 至 T-03 全部通过"}
+
+network:
+  outbound_endpoints:
+    - {domain: "login.idp-sample.example", purpose: "认证类端点（示例）", via_proxy: "是"}
+    - {domain: "sync.idp-sample.example", purpose: "同步服务端点（示例）", via_proxy: "是"}
+    - {domain: "crl.idp-sample.example", purpose: "证书吊销确认（示例）", via_proxy: "是"}
+  dc_connectivity: "云主机经站点间专线访问本地 3 台域控，目录服务端口按官方端口清单放通"
+  proxy: "客户强制使用出站代理，同步服务器需配置代理参数并在代理侧放行出站清单"
+
+review:
+  process: "信息系统部提交申请 → 信息安全部检查表审查 → 质疑应答 → 审查结论通知"
+  materials:
+    - "安全检查表应答（客户指定格式）"
+    - "通信一览（域名、用途、端口、是否经代理）"
+    - "端口开放申请单"
+    - "同步对象范围与属性清单"
+    - "特权账户与凭据保管说明"
+  duration_estimate: "提交后约 3 至 4 周（含一次质疑应答）"
+  likely_questions:
+    - "同步到云侧的数据存放在哪个地区"
+    - "同步服务账户的权限范围与凭据保管方式"
+    - "同步日志的留存位置与期限"
+    - "谁有权登录同步服务器，如何留痕"
+
+pre_communication:
+  - {date: "2026-10-18", department: "C社信息安全部", person_role: "部长", content: "审查流程、提交材料清单与审查周期", conclusion: "同意按检查表与通信一览两份材料审查", follow_up: "通信一览格式在方式決定前确认"}
+  - {date: "2026-10-25", department: "C社网络团队", person_role: "担当", content: "代理放行与站点间专线的端口开放", conclusion: "有条件同意：需提交端口开放申请单", follow_up: "申请单在基本设计阶段提交"}
+
+open_items:
+  - {content: "目录服务功能级别", owner: "C社信息系统部 担当", due: "要件定義完了前", chapter: "2、3"}
+  - {content: "代理放行审批周期", owner: "C社网络团队 担当", due: "方式決定前", chapter: "1、6"}
+  - {content: "云侧已有账号的匹配属性", owner: "构建负责人", due: "検証環境構築完了前", chapter: "7"}
+
+revision_history:
+  - {version: "V1.0", date: "2026-11-10", change: "初版", author: "自社 项目经理", approver: "自社 事业部长"}
+
+deliverables:
+  items: ["proposal", "approval_summary", "runbook", "wbs", "risk", "test_matrix", "qa", "meeting_minutes", "diagrams"]
+  language: "zh"
+  format: "Markdown 源文件 + CSV；定稿另行转换为 PDF"
+
+anchors:
+  - {id: "AN-01", topic: "配置管理器 current branch 版本与生命周期", source: "learn.microsoft.com/mem/configmgr", value: "【示例】不适用本项目", verified_on: "2026-11-10"}
+  - {id: "AN-02", topic: "客户端支持的操作系统版本矩阵", source: "learn.microsoft.com", value: "【示例】不适用本项目", verified_on: "2026-11-10"}
+  - {id: "AN-03", topic: "目录服务功能级别支持矩阵", source: "learn.microsoft.com", value: "【示例】形式占位值，真实使用时填写受支持功能级别", verified_on: "2026-11-10"}
+  - {id: "AN-04", topic: "移行工具官方支持状态", source: "learn.microsoft.com", value: "【示例】不适用本项目", verified_on: "2026-11-10"}
+  - {id: "AN-05", topic: "历史 SID 默认存活期限与配置项", source: "learn.microsoft.com", value: "【示例】不适用本项目", verified_on: "2026-11-10"}
+  - {id: "AN-06", topic: "同步服务出站端点清单与支持的服务器操作系统", source: "learn.microsoft.com", value: "【示例】形式占位值，真实使用时填写出站端点清单与受支持服务器版本", verified_on: "2026-11-10"}
+
+assumptions:
+  - "【假设】客户允许同步服务器访问本地域控的目录服务端口（待网络团队确认）"
+  - "【假设】本地 Exchange 无需混合部署（待要件定义阶段确认）"

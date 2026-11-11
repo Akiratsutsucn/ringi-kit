@@ -1,0 +1,29 @@
+%% {{ doc.figure["sync-flow"].number }} {{ doc.figure["sync-flow"].title }}（数据来源：project.yaml network、current_state）
+flowchart LR
+  subgraph ONP["本地"]
+{% for d in current_state.domains %}
+    DC{{ loop.index }}["{{ d.name | mm }}<br/>域控 {{ d.dc_count }} 台"]
+{% endfor %}
+  end
+  subgraph IAAS["云上 IaaS（与域控分离）"]
+    SYNC["同步服务器（单实例）"]
+  end
+  PX["代理服务器<br/>{{ network.proxy | mm }}"]
+  subgraph EP["出站 443 目标（按 AN-06 核实）"]
+{% for e in network.outbound_endpoints %}
+    E{{ loop.index }}["{{ e.domain | mm }}<br/>{{ e.purpose | mm }}<br/>经代理：{{ e.via_proxy }}"]
+{% endfor %}
+  end
+{% for t in current_state.tenants %}
+  TN{{ loop.index }}["云租户 {{ t.name | mm }}"]
+{% endfor %}
+{% for d in current_state.domains %}
+  SYNC -->|目录服务端口（不止 443）：{{ network.dc_connectivity | mm }}| DC{{ loop.index }}
+{% endfor %}
+  SYNC -->|443| PX
+{% for e in network.outbound_endpoints %}
+  PX --> E{{ loop.index }}
+{% endfor %}
+{% for t in current_state.tenants %}
+  EP --> TN{{ loop.index }}
+{% endfor %}

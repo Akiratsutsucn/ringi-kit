@@ -1,0 +1,19 @@
+%% {{ doc.figure["org-structure"].number }} {{ doc.figure["org-structure"].title }}（数据来源：project.yaml jp.vendors、escalation）
+%% 层数：{{ tiers | length }}
+flowchart TB
+  CL["{{ project.client_name | mm }}<br/>窗口：{{ jp.decision_path.proposer | mm }}"]
+{% for t in tiers %}
+  subgraph TIER{{ t.tier }}["{{ t.label | mm }}"]
+{% for v in t.vendors %}
+    V{{ t.tier }}_{{ loop.index }}["{{ v.name | mm }}<br/>{{ v.role | mm }}<br/>窗口：{{ v.contact_role | mm }}"]
+{% else %}
+    V{{ t.tier }}_0["（本层未登记组织）"]
+{% endfor %}
+  end
+{% endfor %}
+  CL <-->|唯一联络窗口| TIER1
+{% for t in tiers %}
+{% if not loop.first %}
+  TIER{{ t.tier - 1 }} -->|指示与报告，不越级| TIER{{ t.tier }}
+{% endif %}
+{% endfor %}

@@ -1,0 +1,48 @@
+{#- 预想问答集：四类必答问题，每类至少两条；回答引用 S2 评分、回退计划、工作量依据、影响面与冻结窗口。 -#}
+{% set doc_title = "预想问答集：" ~ project.type_label %}
+{% set doc_no = "07" %}
+{% set C = comparison %}
+{% include "_partials/cover.md.j2" %}
+
+## 1 为什么选这个方式而不是另外两个
+
+**问 1-1：为什么采用「{{ C.chosen }}」？**
+答：按{{ C.profile_label }}客户权重对三种方式做五维评分，「{{ C.chosen }}」得 {{ C.chosen_row.weighted }} 分。{% if not C.chosen_is_top %}最高分为「{{ C.top.name }}」（{{ C.top.weighted }} 分），但它不满足贵司硬性要求，理由见方案书 4.4 节。{% else %}该得分为三者最高。{% endif %}
+
+{% for r in C.rejected %}
+**问 1-{{ loop.index + 1 }}：为什么不采用「{{ r.name }}」？**
+答：加权得分 {{ r.weighted }} 分。{{ r.reason }}
+
+{% endfor %}
+**问 1-{{ C.rejected | length + 2 }}：权重变化后结论会翻转吗？**
+答：{{ C.sensitivity_note }}
+
+## 2 失败了怎么办
+
+**问 2-1：切换当天出问题，在几点之前决定回退？**
+答：以切换开始时刻 T（{{ cutover.t_definition }}）为基准：{% for c in cutover.checkpoints %}T+{{ c.t_plus_minutes }}分钟未达成「{{ c.expected_state }}」即{{ c.on_miss }}{% if not loop.last %}；{% endif %}{% endfor %}。判定责任者为 {{ cutover.decision_role }}。
+
+**问 2-2：回退要多久，回退后是什么状态？**
+答：{% for lv in cutover.rollback_levels %}「{{ lv.name }}」预计 {{ lv.minutes }} 分钟，回退后状态为{{ lv.end_state }}{% if not loop.last %}；{% endif %}{% endfor %}。详见方案书第 9 章。
+
+## 3 为什么是这个成本
+
+**问 3-1：工作量的依据是什么？**
+答：实施手册共 {{ steps.list | length }} 个步骤，预计作业时间合计 {{ steps.total_minutes }} 分钟；另按工作分解计入每个承认节点前 {{ jp.approval_buffer_days }} 个工作日的承认缓冲。工作分解见 04_WBS.csv。
+
+**问 3-2：为什么不选成本更低的方式？**
+答：成本维度权重为 {{ C.weights.cost }}，风险维度为 {{ C.weights.risk }}。{% for r in C.rows %}「{{ r.name }}」成本 {{ r.scores.cost }} 分、风险 {{ r.scores.risk }} 分{% if not loop.last %}；{% endif %}{% endfor %}。低成本方式的风险或业务影响评分不可接受。
+
+## 4 对现有业务有什么影响
+
+**问 4-1：哪些人受影响、影响多久？**
+答：{% for m in impact.matrix %}{{ m.unit }}（{{ m.department }}）{{ m.count }}，中断 {{ m.downtime_minutes }} 分钟{% if not loop.last %}；{% endif %}{% endfor %}。估算依据：{{ impact.downtime_basis }}
+
+**问 4-2：会不会撞上期末或长假？**
+答：上线、切换类任务避开全部冻结窗口（{% for w in jp.freeze_windows %}{{ w.name }}{% if not loop.last %}、{% endif %}{% endfor %}）。{% if schedule.fiscal_boundary_risks %}以下任务靠近期末，已登记风险条目：{% for fb in schedule.fiscal_boundary_risks %}{{ fb.task_name }}（{{ fb.boundary }}）{% if not loop.last %}、{% endif %}{% endfor %}。{% else %}没有任务落在期末前后 10 个工作日内。{% endif %}
+
+**问 4-3：用户需要做什么？**
+答：{% for a in impact.user_actions %}{{ a }}{% if not loop.last %}；{% endif %}{% endfor %}。
+
+信息核实时点：{{ doc.info_as_of }}
+{% include "_partials/closing.md.j2" %}

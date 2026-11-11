@@ -1,0 +1,98 @@
+{#- 实施手册：作业前提 → 阶段别步骤清单（每步九字段）→ Gate 检查执行手顺 → 回退手顺 → 附录。
+    与方案书消费同一 fact model：step_id / gate_id / risk_id 指向同一对象。 -#}
+{% set doc_title = "实施手册：" ~ project.type_label %}
+{% set doc_no = "03" %}
+{% include "_partials/cover.md.j2" %}
+
+{% include "_partials/revision-history.md.j2" %}
+## 作业前提
+
+- 本手册与方案书 {{ project.code }}-01 同源生成；步骤编号、Gate 编号、风险编号与方案书一致。
+- 每一步执行前确认「前置条件」全部满足；任一条件不满足，不执行该步。
+- 每一步的「失败处置」指向失败模式库条目（`references/failure-modes.md`）。
+- 回退判定责任者：{{ cutover.decision_role }}。切换开始时刻 T 的定义：{{ cutover.t_definition }}。
+- 冻结窗口内不执行任何上线、切换与大范围变更：{% for w in jp.freeze_windows %}{{ w.name }}（{{ w.start }}～{{ w.end }}）{% if not loop.last %}、{% endif %}{% endfor %}。
+- 步骤合计 {{ steps.list | length }} 个，预计总耗时 {{ steps.total_minutes }} 分钟。
+
+## 阶段别步骤清单
+
+{% for grp in steps.by_phase %}
+### 阶段：{{ grp.phase }}
+
+{% for s in grp.steps %}
+#### {{ s.id }} {{ s.name }}
+
+| 字段 | 内容 |
+|---|---|
+| step_id | {{ s.id }} |
+| 前置条件 | {% for p in s.preconditions %}{{ loop.index }}. {{ p }}{% if not loop.last %}<br>{% endif %}{% endfor %} |
+| 操作 | {{ s.action }} |
+| 预期结果 | {{ s.expected }} |
+| 验证方法 | {{ s.verify }} |
+| 失败处置 | {{ s.on_fail }}（见失败模式库） |
+| 回退动作 | {{ s.rollback }} |
+| 预计耗时 | {{ s.minutes }} 分钟 |
+| 责任人角色 | {{ s.owner_role }} |
+
+{% endfor %}
+{% endfor %}
+## Gate 检查执行手顺
+
+{% for g in gates %}
+### {{ g.id }} {{ g.name }}
+
+| # | 检查项 | 结果（通过/不通过） | 证据文件 |
+|---|---|---|---|
+{% for c in g.checks %}
+| {{ loop.index }} | {{ c }} | | evidence/{{ g.id }}-{{ "%02d" | format(loop.index) }}.csv |
+{% endfor %}
+
+不通过时：{{ g.fail_action }}
+
+{% endfor %}
+## 回退手顺
+
+T+分钟检查点：
+
+{% for c in cutover.checkpoints %}
+- T+{{ c.t_plus_minutes }}分钟：期望状态为「{{ c.expected_state }}」；未达成时{{ c.on_miss }}。
+{% endfor %}
+
+{% for lv in cutover.rollback_levels %}
+### {{ lv.name }}
+
+- 触发条件：{{ lv.trigger }}
+- 判定时限：{{ lv.deadline }}
+- 预计耗时：{{ lv.minutes }} 分钟
+- 回退后状态：{{ lv.end_state }}
+
+{% for s in lv.steps %}
+{{ loop.index }}. {{ s }}
+{% endfor %}
+
+{% endfor %}
+## 附录 A 脚本清单
+
+| 目录 | 用途 | 输出 |
+|---|---|---|
+| powershell/common | 日志、断言、CSV 导出公共函数 | 统一日志 |
+{% if project.project_type == "sccm" %}
+| powershell/sccm | 客户端铺装前置检查、集合成员导出、边界覆盖差集 | evidence/*.csv |
+{% elif project.project_type == "admerge" %}
+| powershell/ad | 域结构盘点、账户映射导出、历史 SID 审计 | evidence/*.csv |
+{% else %}
+| powershell/entraconnect | 域控连通性、出站端点、同步状态检查 | evidence/*.csv |
+{% endif %}
+
+全部脚本为只读盘点或前置检查，执行前以 `-WhatIf` 或只读参数确认影响范围。
+
+## 附录 B 证据清单
+
+{% for g in gates %}
+{% for c in g.checks %}
+- evidence/{{ g.id }}-{{ "%02d" | format(loop.index) }}.csv：{{ c }}
+{% endfor %}
+{% endfor %}
+
+信息核实时点：{{ doc.info_as_of }}
+{% include "_partials/closing.md.j2" %}

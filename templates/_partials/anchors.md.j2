@@ -1,0 +1,18 @@
+{# 核查锚点区块：锚点值替换占位文本 + 页脚信息核实时点。 #}
+## {{ L.front.anchors }}
+
+| 锚点 | 核实对象 | 核实来源 | 核实结果 | 核实日 |
+|---|---|---|---|---|
+{% for a in anchors.list %}
+| {{ a.id }} | {{ a.topic }} | {{ a.source }} | {{ a.value }} | {{ a.verified_on }} |
+{% endfor %}
+
+{% if anchors.unverified %}
+未核实锚点：{% for u in anchors.unverified %}{{ u.id }}（{{ u.problems | join('；') }}）{% if not loop.last %}、{% endif %}{% endfor %}。本文件在锚点核实前不得交付。
+{% else %}
+以上锚点均已在 {{ 90 }} 天内核实，核实结果已替换文中对应的待核实位置。
+{% endif %}
+
+---
+
+信息核实时点：{{ doc.info_as_of }}

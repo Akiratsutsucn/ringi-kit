@@ -1,0 +1,49 @@
+{#- 稟议用摘要：固定五节，≤1200 字，不得出现技术命令。数字与方案书同源（同一 fact model）。 -#}
+{% set doc_title = "稟议用摘要：" ~ project.type_label %}
+{% set doc_no = "02" %}
+{% set C = comparison %}
+{% include "_partials/cover.md.j2" %}
+
+## 1 目的与背景
+
+{{ project.client_name }}现状：{% for p in current_state.pain_points[:2] %}{{ p.point }}{% if not loop.last %}；{% endif %}{% endfor %}。本项目的目标为{{ targets.scope }}，计划 {{ schedule.go_live }} 上线（{{ project.fiscal_year }}）。
+{% if project.project_type == "admerge" %}
+注意：域合并完成不等于云租户合并，合并后云侧仍为 {{ current_state.tenant_count }} 个租户，云租户合并不在本次范围内。
+{% endif %}
+
+## 2 投资与效果
+
+预算期为 {{ jp.budget_period }}。完成后的效果以下列验收基准判定：
+
+{% for s in targets.success_criteria %}
+- {{ s }}
+{% endfor %}
+
+## 3 替代方案比较
+
+| 方式 | 加权得分 | 结论 |
+|---|---|---|
+{% for r in C.rows %}
+| {{ r.name }} | {{ r.weighted }} | {{ "采用" if r.name == C.chosen else "不采用" }} |
+{% endfor %}
+
+采用「{{ C.chosen }}」。{% if not C.chosen_is_top %}最高分方式「{{ C.top.name }}」不满足贵司硬性要求，不采用。{% endif %}理由详见方案书第 4 章。
+
+## 4 风险与对策
+
+{% for r in risks.top5[:3] %}
+- {{ r.description }}：{{ r.mitigation }}
+{% endfor %}
+- 回退：以切换开始时刻为基准，按分钟检查点判定，未达成即回退（方案书第 9 章）。
+
+## 5 请批事项
+
+- 批准采用「{{ C.chosen }}」实施本项目。
+- 批准日程：{{ schedule.start }} 启动，{{ schedule.go_live }} 上线；承认节点 {{ schedule.milestones | selectattr("approval") | list | length }} 个。
+- 批准方案书第 10 章所列体制与责任分界。
+
+审批路径：提案人 {{ jp.decision_path.proposer }} → 审批人 {{ jp.decision_path.approver }} → 签字人 {{ jp.decision_path.signer }}。
+
+{% include "_partials/approval-block.md.j2" %}
+信息核实时点：{{ doc.info_as_of }}
+{% include "_partials/closing.md.j2" %}

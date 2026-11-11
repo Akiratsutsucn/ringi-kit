@@ -1,0 +1,280 @@
+# 示例 B：多企业 AD 合并（附录 A-2 + 本实现的扩展键）
+# 全部为占位符与假设值，不含真实客户信息。扩展键说明见 IMPLEMENTATION_NOTES.md。
+
+project:
+  code: "PRJ-B-001"
+  client_name: "B集团（代号）"
+  client_display_name: "Bグループ 御中"
+  issuer: "自社名 ○○事業部 ○○"
+  industry: "流通・小売"
+  employee_range: "3000-5000"
+  sites_count: 18
+  sites_distribution: "关东9 / 中部4 / 关西3 / 九州2"
+  project_type: "admerge"
+  confidentiality: "関係者限り"
+
+jp:
+  fiscal_year_start_month: 4
+  budget_period: "2028年度通期预算（方式决裁稟议于上半期内完成）"
+  approval_buffer_days: 10
+  approval_nodes: ["内部评审", "客户评审", "再承认"]
+  freeze_windows:
+    - {name: "年末年始", start: "2027-12-29", end: "2028-01-03"}
+    - {name: "お盆", start: "2028-08-13", end: "2028-08-16"}
+    - {name: "期末棚卸", start: "2028-03-25", end: "2028-03-31"}
+  fiscal_boundary_months: [3, 9]
+  security_review: "required"
+  consumer_side_check_sheet: true
+  multi_tier_vendors: true
+  vendor_tiers: 3
+  decision_path:
+    proposer: "B集团 信息系统统括部 课长"
+    approver: "B集团 信息系统统括部 部长"
+    signer: "B集团 管理本部 役员"
+  vendors:
+    - {tier: 1, name: "自社（总承包）", role: "项目管理与迁移设计", scope: "方式论证、迁移设计、切换判定、三社调整窗口", not_doing: "不代替三社做命名例外的批准", contact_role: "项目经理"}
+    - {tier: 2, name: "一次承包方（代号 Q1）", role: "迁移执行", scope: "信任构建、对象迁移、权限重写、证据采集", not_doing: "不直接与三社业务部门联络", contact_role: "迁移负责人"}
+    - {tier: 3, name: "现场作业方（代号 Q2）", role: "拠点现场支援", scope: "首次登录支援、打印机与共享映射确认", not_doing: "不变更目录对象与组策略", contact_role: "现场组长"}
+
+current_state:
+  domains:
+    - {name: "corp.b1-example.jp", forest: "b1", dc_count: 6, functional_level: "【待确认】"}
+    - {name: "corp.b2-example.jp", forest: "b2", dc_count: 4, functional_level: "【待确认】"}
+    - {name: "corp.b3-example.jp", forest: "b3", dc_count: 2, functional_level: "【待确认】"}
+  cloud_tenants:
+    - {name: "b1tenant", user_count: 2100, sync_method: "password_hash"}
+    - {name: "b2tenant", user_count: 1400, sync_method: "password_hash"}
+    - {name: "b3tenant", user_count: 600, sync_method: "none"}
+  endpoints:
+    total: 4200
+    by_site: {东京: 1800, 名古屋: 900, 大阪: 800, 福冈: 400, 其他: 300}
+  existing_tools: ["Exchange（本地，B1/B2）", "文件服务器（各社独立）", "ERP（各社不同）"]
+  pain_points:
+    - {point: "三社登录名规则不同，集团内调岗需重建账号", evidence: "【示例】上一财年跨社调岗约 120 人，每人平均重建 3 个账号"}
+    - {point: "三套域控与组策略分别运维", evidence: "【示例】三社合计目录运维人员 7 名，策略基线不一致项 40 余项"}
+    - {point: "跨社资源访问依赖个别配置的信任与本地账号", evidence: "【示例】共享文件夹中为跨社访问单独创建的本地账号约 60 个"}
+  unquantified:
+    - {item: "依赖旧安全标识的业务应用数量", impact: "决定历史 SID 回收日与改造工作量，基本设计前完成盘点"}
+    - {item: "组嵌套最大深度与服务账户总数", impact: "影响迁移批次划分与 F-039、F-043 的预防工作量"}
+
+targets:
+  scope: "将 B2、B3 两林的用户与计算机对象整合至 B1 林，统一登录名与组策略基线"
+  out_of_scope:
+    - "云租户合并（另案检讨）"
+    - "ERP 与业务应用整合"
+    - "文件服务器数据迁移（仅处理权限重写）"
+  success_criteria:
+    - "对象迁移完成率 ≥99.5%（无法迁移者须逐项列明理由）"
+    - "迁移后用户可访问原有资源（抽样 200 名）"
+    - "登录名统一规则 100% 适用，例外须书面批准"
+
+schedule:
+  start: "2028-04-01"
+  go_live: "2028-12-10"
+  milestones:
+    - {name: "要件定義完了", date: "2028-05-20", approval: true, kind: "normal"}
+    - {name: "方式決定（稟議決裁）", date: "2028-06-30", approval: true, kind: "normal"}
+    - {name: "基本設計完了", date: "2028-08-10", approval: true, kind: "normal"}
+    - {name: "パイロット移行完了", date: "2028-10-05", approval: true, kind: "cutover"}
+    - {name: "本番切替完了", date: "2028-12-05", approval: true, kind: "cutover"}
+
+rollout:
+  - {id: "W-01", name: "试点迁移", scope: "B3 信息系统部门及一个拠点", count: 150, start: "2028-10-17", end: "2028-10-20", business_impact: "迁移当晚停用账号 3 小时，次日首次登录需重新登录", exit_criteria: "抽样资源访问成功率 ≥99%，无未关闭的一级问询"}
+  - {id: "W-02", name: "B3 全体", scope: "B3 剩余用户与计算机", count: 450, start: "2028-10-31", end: "2028-11-10", business_impact: "按部门分 3 晚迁移", exit_criteria: "迁移完成率 ≥99.5%，打印机与共享映射确认完成"}
+  - {id: "W-03", name: "B2 全体", scope: "B2 用户与计算机", count: 1400, start: "2028-11-14", end: "2028-12-01", business_impact: "按拠点分 6 晚迁移，邮箱切换随批次执行", exit_criteria: "迁移完成率 ≥99.5%，邮箱与目录账户一致"}
+
+comparison:
+  client_profile: "conservative"
+  options:
+    - {name: "同林内重组", scores: {cost: 5, risk: 1, duration: 4, impact: 2, scalability: 3}}
+    - {name: "跨林迁移（含历史 SID 迁移）", scores: {cost: 2, risk: 3, duration: 2, impact: 3, scalability: 5}}
+    - {name: "资源林 + 林间信任", scores: {cost: 3, risk: 4, duration: 3, impact: 4, scalability: 2}}
+  chosen: "跨林迁移（含历史 SID 迁移）"
+  rejected_reasons:
+    "同林内重组": "B1/B2/B3 为三个独立林，同林内重组在技术上不适用；若强行新建统一林，等价于跨林迁移但需重建全部对象，风险更高。"
+    "资源林 + 林间信任": "三林长期并存意味着三套域控、三套组策略、三套运维人员，五年 TCO 高于迁移；且客户明确要求『统一登录名』，信任关系无法满足该要求。"
+  sensitivity_note: "若『成本』权重上调至 0.35 以上，资源林方案总分可能反超，但该方案无法满足客户已书面确认的『统一登录名』硬性要求，故结论不翻转。"
+
+risks:
+  - {id: "R-01", category: "技术", description: "用户可登录但访问旧资源被拒", trigger: "历史 SID 未迁移或账户映射错误", impact: "业务中断投诉", likelihood: "高", mitigation: "映射表逐条回查；切换前抽样 200 名验证资源访问", owner: "目录服务工程师", related_task: "B-04-02", status: "未处理"}
+  - {id: "R-02", category: "技术", description: "历史 SID 到期后权限静默失效", trigger: "回收日到达但依赖应用未改造", impact: "旧系统不可用且难以定位", likelihood: "高", mitigation: "方案中确定回收日与前置条件；建立依赖应用清单并逐项跟踪改造", owner: "目录服务工程师", related_task: "B-05-03", status: "未处理"}
+  - {id: "R-03", category: "战略", description: "客户误认为域合并等于云租户合并", trigger: "方案未在第一章声明云侧仍为多租户", impact: "验收阶段争议，项目被要求追加范围", likelihood: "高", mitigation: "第 1 章设专节声明（≥200 字），并在稟議用摘要中重复", owner: "项目经理", related_task: "B-01-02", status: "未处理"}
+  - {id: "R-04", category: "组织", description: "各社账号命名规则无法统一", trigger: "存在同名同姓或命名习惯冲突", impact: "迁移延期", likelihood: "中", mitigation: "要件定义阶段确定命名规则与例外受理流程", owner: "项目经理", related_task: "B-03-01", status: "未处理"}
+  - {id: "R-05", category: "技术", description: "计算机账户迁移后组策略失效", trigger: "OU 结构与 GPO 链接未同步设计", impact: "终端策略异常", likelihood: "中", mitigation: "迁移前完成 OU 与 GPO 映射设计；试点验证策略应用结果", owner: "目录服务工程师", related_task: "B-04-03", status: "未处理"}
+  - {id: "R-06", category: "技术", description: "移行工具支持状态变化导致中途停摆", trigger: "工具官方支持终止", impact: "迁移无法继续", likelihood: "低", mitigation: "AN-04 锚点每次生成时核实；准备替代路径", owner: "架构师", related_task: "B-02-01", status: "未处理"}
+
+steps:
+  - id: "B-01-02"
+    phase: "前提与制约"
+    name: "云侧身份状态声明编制"
+    preconditions:
+      - "各社租户清单与同步方式已取得"
+    action: "编制云侧身份现状与合并后状态说明，列明可选路径"
+    expected: "≥200 字说明，含租户数量、同步方式、合并后仍为多租户的事实、后续可选路径"
+    verify: "客户技术负责人书面确认已知悉"
+    on_fail: "F-031"
+    rollback: "无技术回退，补充说明后重新提交"
+    minutes: 180
+    owner_role: "项目经理"
+  - id: "B-02-01"
+    phase: "设计"
+    name: "移行工具支持状态核实"
+    preconditions:
+      - "AN-04 锚点已建"
+    action: "按锚点提示访问官方文档，核实工具支持状态与版本要求"
+    expected: "锚点 value 已填，verified_on 为当日"
+    verify: "lint.py L-13 通过"
+    on_fail: "F-032"
+    rollback: "不适用（只读核实）"
+    minutes: 60
+    owner_role: "架构师"
+  - id: "B-03-01"
+    phase: "设计"
+    name: "账号命名规则与例外流程确定"
+    preconditions:
+      - "三社账号清单已导出"
+    action: "编制命名规则、冲突处理规则、例外受理流程，提交客户评审"
+    expected: "规则文档获客户承认"
+    verify: "承认记录归档"
+    on_fail: "F-033"
+    rollback: "规则未获承认前不进入迁移实施"
+    minutes: 480
+    owner_role: "项目经理"
+  - id: "B-04-02"
+    phase: "实施"
+    name: "切换前 Gate 检查与抽样验证"
+    preconditions:
+      - "G-B-01 全部检查项已准备证据"
+    action: "执行七项检查，抽样 200 名用户验证资源访问"
+    expected: "七项通过，抽样成功率 ≥99%"
+    verify: "证据 CSV 与抽样记录归档"
+    on_fail: "F-040"
+    rollback: "暂停切换，修复后重新检查"
+    minutes: 300
+    owner_role: "目录服务工程师"
+  - id: "B-04-03"
+    phase: "实施"
+    name: "计算机账户迁移与策略验证"
+    preconditions:
+      - "OU 与 GPO 映射设计已完成"
+    action: "迁移计算机账户并在试点终端验证策略应用"
+    expected: "试点终端策略正常，无异常事件"
+    verify: "事件日志核对 + 策略结果集导出"
+    on_fail: "F-041"
+    rollback: "将计算机账户回滚至源林并恢复原 GPO 链接"
+    minutes: 360
+    owner_role: "目录服务工程师"
+  - id: "B-05-03"
+    phase: "收尾"
+    name: "历史 SID 回收计划编制"
+    preconditions:
+      - "依赖旧 SID 应用清单已完成"
+    action: "确定回收日、前置条件、清理后验证方法与责任人"
+    expected: "文档含具体日期、前置条件清单、验证步骤"
+    verify: "客户承认回收计划"
+    on_fail: "F-042"
+    rollback: "延长回收日并追加改造资源"
+    minutes: 240
+    owner_role: "架构师"
+
+gates:
+  - id: "G-B-01"
+    name: "域合并切换前检查"
+    checks:
+      - "账户映射表逐条可追溯"
+      - "历史 SID 存活期限与回收日已书面确定"
+      - "依赖旧 SID 的应用清单及改造计划已确认"
+      - "跨林权限重写完成"
+      - "回退时间点精确到分钟"
+      - "云侧租户数量与合并后状态已向客户书面说明"
+      - "移行工具官方支持状态已核实"
+    fail_action: "暂停切换，逐项补齐后重新检查"
+
+acceptance:
+  - {id: "T-01", requirement: "对象迁移完成率 ≥99.5%", content: "统计源林对象迁移结果", method: "源/目标清单差集", criteria: "完成率 ≥99.5%，未完成项逐项列明理由", evidence: "差集报告 CSV", client_confirmer: "客户信息系统部 部长", result: ""}
+  - {id: "T-02", requirement: "抽样用户资源访问正常", content: "200 名抽样用户访问旧资源", method: "脚本验证 + 用户确认", criteria: "成功率 ≥99%", evidence: "抽样记录 + 用户确认书", client_confirmer: "客户业务部门 担当", result: ""}
+  - {id: "T-03", requirement: "登录名统一规则适用", content: "核对全部用户登录名", method: "规则比对脚本", criteria: "100% 适用，例外有书面批准", evidence: "规则比对报告 + 例外批准书", client_confirmer: "客户信息系统部 担当", result: ""}
+
+impact:
+  matrix:
+    - {unit: "B3 试点部门", department: "信息系统部门", count: 150, change: "账号迁入 B1 林，登录名变更", downtime_minutes: 180, wave: "W-01"}
+    - {unit: "B3 各拠点", department: "全部门", count: 450, change: "账号与计算机迁入 B1 林", downtime_minutes: 180, wave: "W-02"}
+    - {unit: "B2 各拠点", department: "全部门", count: 1400, change: "账号、计算机与邮箱迁入 B1 林", downtime_minutes: 240, wave: "W-03"}
+  user_visible_changes:
+    - {item: "登录名", changed: "是", detail: "改为集团统一规则的登录名，迁移前一周邮件通知新登录名。"}
+    - {item: "密码", changed: "否", detail: "沿用原密码，首次登录后按集团策略在 90 日内变更。"}
+    - {item: "重新登录", changed: "是", detail: "迁移次日首次开机需用新登录名登录一次。"}
+    - {item: "邮件客户端", changed: "是", detail: "B2 用户的邮件客户端在首次启动时自动重新配置，需等待约 5 分钟。"}
+    - {item: "共享文件夹", changed: "否", detail: "访问路径不变，权限经历史 SID 维持，回收日前完成权限重写。"}
+    - {item: "打印机", changed: "否", detail: "由登录脚本重新映射，用户无需操作。"}
+    - {item: "桌面与个人设置", changed: "否", detail: "配置文件随迁移转换，桌面与文档保持原样。"}
+  user_actions:
+    - "迁移前一日下班前保存文件并注销"
+    - "迁移次日用新登录名登录，原密码不变"
+    - "发现共享文件夹或打印机无法使用时联系拠点现场组长"
+  user_no_actions:
+    - "不需要重新设置桌面、收藏夹与个人文档"
+    - "不需要手工添加打印机或共享文件夹"
+  downtime_basis: "依据试点迁移的计划值：每批迁移在 20 时至 23 时执行，期间该批账号停用约 3 小时；B2 批次含邮箱切换，按 4 小时计。业务时间内中断为 0 分钟，试点后以实测值修订。"
+
+cutover:
+  t_definition: "每批迁移当晚 20:00 开始停用源账号的时刻"
+  checkpoints:
+    - {t_plus_minutes: 60, expected_state: "当批账号与计算机对象迁移完成率 ≥99%", on_miss: "停止当批剩余迁移，启动单批回退"}
+    - {t_plus_minutes: 120, expected_state: "抽样 20 名用户以新登录名登录成功并可访问原共享资源", on_miss: "启动单批回退，源账号恢复启用"}
+    - {t_plus_minutes: 180, expected_state: "当批全部检查项通过，源账号保持停用", on_miss: "启动单批回退，次日 9 时前提交经过报告"}
+  decision_role: "项目经理（与 B集团信息系统统括部课长共同判定）"
+  rollback_levels:
+    - {name: "单批回退", trigger: "当批任一检查点未达成", deadline: "T+180 分钟", steps: ["停止当批迁移任务", "重新启用当批源账号与源计算机账户", "在目标林停用当批已迁移对象", "抽样确认用户以原登录名登录与资源访问恢复"], minutes: 90, end_state: "当批用户以原登录名在源林登录，资源访问与迁移前一致"}
+    - {name: "全面停止", trigger: "连续两批回退，或发现映射表系统性错误", deadline: "第二次回退判定后 24 小时内", steps: ["冻结全部后续批次", "保持已完成批次在目标林的状态", "召开三社临时评审会确认原因与重排方针"], minutes: 60, end_state: "已完成批次维持现状，后续批次暂停至重新承认"}
+
+escalation:
+  - {level: "一级", condition: "个别用户登录或资源访问问询", contact_role: "现场组长", within: "受理后 1 小时内答复"}
+  - {level: "二级", condition: "同一批次 10 名以上用户异常", contact_role: "迁移负责人", within: "30 分钟内首报"}
+  - {level: "三级", condition: "检查点未达成或回退判定", contact_role: "项目经理 → B集团信息系统统括部课长", within: "15 分钟内首报"}
+
+pilot:
+  target: "B3 信息系统部门及一个拠点（150 名）"
+  reason: "B3 林规模最小、回退影响最小；信息系统部门用户能准确描述异常，便于定位"
+  representativeness: "包含共享文件夹、打印机、本地配置文件三类依赖，覆盖迁移中最常见的失败模式"
+  success_criteria:
+    - "抽样资源访问成功率 ≥99%"
+    - "组策略应用结果与设计一致"
+    - "回退演练一次并在 90 分钟内完成"
+  on_fail: "不进入 W-02；按失败模式库定位原因，修正映射表或权限重写方案后重新试点"
+
+phases:
+  - {name: "要件定义与方式决裁", goal: "确定命名规则、迁移方式并完成稟议决裁", gate: "方式決定承认", exit_criteria: "方式决裁稟议获批"}
+  - {name: "基本设计与信任构建", goal: "完成目标林设计、OU 与 GPO 映射、信任构建", gate: "基本設計完了承认", exit_criteria: "设计书获承认且信任验证通过"}
+  - {name: "试点迁移", goal: "在试点对象上验证映射、权限与回退", gate: "G-B-01", exit_criteria: "G-B-01 七项全部通过且试点成功标准达成"}
+  - {name: "分批迁移与收尾", goal: "完成 B3、B2 迁移并确定历史 SID 回收计划", gate: "验收矩阵", exit_criteria: "T-01 至 T-03 全部通过"}
+
+pre_communication:
+  - {date: "2026-10-15", department: "B集团信息系统统括部", person_role: "部长", content: "三方式比较结论与云侧仍为多租户的声明", conclusion: "同意跨林迁移，要求稟议摘要明写云租户不合并", follow_up: "已在稟议用摘要第 1 节写明"}
+  - {date: "2026-10-22", department: "B2 信息系统部", person_role: "课长", content: "B2 登录名变更与邮箱切换的用户影响", conclusion: "有条件同意：需提供首次登录指引", follow_up: "首次登录指引在基本设计阶段交付"}
+  - {date: "2026-10-29", department: "B3 业务部门", person_role: "业务主管", content: "试点迁移对象与时间窗", conclusion: "需内部讨论", follow_up: "下次周会确认试点部门，确认期限为要件定義完了前"}
+
+open_items:
+  - {content: "三社域功能级别", owner: "三社信息系统部 担当", due: "要件定義完了前", chapter: "2、4"}
+  - {content: "依赖旧安全标识的应用清单", owner: "三社应用负责人", due: "基本設計完了前", chapter: "2、8"}
+  - {content: "B3 试点部门最终确定", owner: "B3 业务主管", due: "要件定義完了前", chapter: "5"}
+
+revision_history:
+  - {version: "V1.0", date: "2026-11-10", change: "初版", author: "自社 项目经理", approver: "自社 事业部长"}
+
+deliverables:
+  items: ["proposal", "approval_summary", "runbook", "wbs", "risk", "test_matrix", "qa", "meeting_minutes", "diagrams"]
+  language: "zh"
+  format: "Markdown 源文件 + CSV；定稿另行转换为 PDF"
+
+anchors:
+  - {id: "AN-01", topic: "配置管理器 current branch 版本与生命周期", source: "learn.microsoft.com/mem/configmgr", value: "【示例】不适用本项目", verified_on: "2026-11-10"}
+  - {id: "AN-02", topic: "客户端支持的操作系统版本矩阵", source: "learn.microsoft.com", value: "【示例】不适用本项目", verified_on: "2026-11-10"}
+  - {id: "AN-03", topic: "目录服务功能级别支持矩阵", source: "learn.microsoft.com", value: "【示例】形式占位值，真实使用时填写受支持功能级别与目标林要求", verified_on: "2026-11-10"}
+  - {id: "AN-04", topic: "移行工具官方支持状态与版本要求", source: "learn.microsoft.com", value: "【示例】形式占位值，真实使用时填写工具支持状态与版本要求", verified_on: "2026-11-10"}
+  - {id: "AN-05", topic: "历史 SID 默认存活期限与配置项", source: "learn.microsoft.com", value: "【示例】形式占位值，真实使用时填写存活期限所属机制与配置项", verified_on: "2026-11-10"}
+  - {id: "AN-06", topic: "同步服务出站端点清单与支持的服务器操作系统", source: "learn.microsoft.com", value: "【示例】不适用本项目", verified_on: "2026-11-10"}
+
+assumptions:
+  - "【假设】三社的域功能级别均可提升至目标林要求（待企业访谈确认）"
+  - "【假设】B2/B3 无 Exchange 本地部署（仅 B1/B2 有，需在要件定义阶段确认）"

@@ -1,0 +1,4 @@
+任务ID,阶段,任务名,前置任务,开始,结束,工期,责任人角色,承认节点,备注
+{% for r in schedule.wbs %}
+{{ r.id | csv }},{{ r.phase | csv }},{{ r.name | csv }},{{ r.depends | csv }},{{ r.start | csv }},{{ r.end | csv }},{{ r.duration | csv }},{{ r.owner | csv }},{{ r.approval | csv }},{{ r.note | csv }}
+{% endfor %}

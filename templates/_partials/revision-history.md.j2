@@ -1,0 +1,10 @@
+{# 修订履历：表头五项为固定日文版式字段；行来自 revision_history（S5 每次修订新增一行）。 #}
+## {{ L.front.revision }}
+
+<!-- 固定版式字段：请勿改写 --><!-- FIELD:revision_header -->
+| 版数 | 日付 | 変更内容 | 作成者 | 承認者 |
+|---|---|---|---|---|
+{% for r in revision_history %}
+| {{ r.version }} | {{ r.date }} | {{ r.change }} | {{ r.author }} | {{ r.approver }} |
+{% endfor %}
+
